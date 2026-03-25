@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #0f172a;
+            --sidebar-bg: #1e293b; 
+            --accent: #10b981;
+            --border: #e2e8f0;
+            --bg: #f1f5f9;
+            --text-muted: #94a3b8;
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
+        body { display:flex; min-height:100vh; background:var(--bg); color: var(--primary); overflow: hidden; }
+
+        /* --- SIDEBAR WITH SCROLL --- */
+        .sidebar { 
+            width: 280px; 
+            background: var(--sidebar-bg); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            background: var(--sidebar-bg);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 15px 30px 15px;
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar-nav::-webkit-scrollbar { width: 5px; }
+        .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        .sidebar h2 { display: flex; align-items: center; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
+        .sidebar h2 img { width: 32px; height: 32px; margin-right: 12px; border-radius: 6px; background: var(--accent); padding: 5px; }
+        
+        .nav-group-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin: 25px 0 8px 12px; letter-spacing: 1.2px; }
+        .nav-list { list-style: none; }
+        .nav-item { margin-bottom: 4px; }
+        .nav-link { 
+            padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+            font-size: 13.5px; font-weight: 500; color: #cbd5e1; text-decoration: none; border-radius: 8px; transition: 0.2s;
+        }
+        .nav-link i { width: 18px; font-size: 15px; text-align: center; opacity: 0.7; }
+        .nav-item:hover .nav-link { background: rgba(255,255,255,0.06); color: white; }
+        .nav-item.active .nav-link { background: var(--accent); color: white; font-weight: 600; }
+        
+        /* Submenu */
+        .submenu { list-style:none; padding-left:38px; max-height:0; overflow:hidden; transition: 0.3s ease; }
+        .submenu li { font-size: 13px; padding: 7px 0; color: #94a3b8; cursor: pointer; }
+        .submenu li:hover { color: white; }
+        .has-submenu.open .submenu { max-height: 200px; margin-top: 4px; }
+        .chevron { margin-left: auto; font-size: 11px; transition: 0.3s; opacity: 0.5; }
+        .has-submenu.open .chevron { transform: rotate(180deg); }
+
+        /* Role CSS Hooks */
+        .auth-admin, .auth-super { display: none; }
+
+        /* --- MAIN CONTENT --- */
+        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .topbar { height: 70px; background: var(--white); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-bottom: 1px solid var(--border); }
+        
+        .profile-container { display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; padding: 5px 8px; border-radius: 10px; transition: 0.2s; }
+        .profile-container:hover { background: #f8fafc; }
+        .profile-info { text-align: right; line-height: 1.2; }
+        .profile-info .name { display: block; font-size: 14px; font-weight: 700; color: var(--primary); }
+        .profile-info .role-tag { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; }
+        .profile-img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; background: #eee; }
+
+        /* Content Area */
+        .content { padding: 30px; overflow-y: auto; flex: 1; }
+        .card-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .stat-card h4 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+        .stat-card .val { font-size: 24px; font-weight: 700; }
+
+        /* --- MINI CHART RESIZED --- */
+        .chart-box { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            height: 320px;
+        }
+        #miniChart { max-width: 170px !important; max-height: 170px !important; }
+
+        .table-box { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+        .table-header { padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-bottom: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 14px 20px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 15px 20px; font-size: 13.5px; border-bottom: 1px solid #f8fafc; }
+
+        .dropdown-menu { 
+            position: absolute; top: 60px; right: 0; width: 180px; background: white; 
+            border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow); 
+            display: none; padding: 8px; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><img src="Icon2.png" alt="Logo"> HRMS</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+        <div class="nav-group-label">Core</div>
+        <ul class="nav-list">
+            <li class="nav-item active"><a href="#" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a></li>
+            
+            <li class="nav-item auth-admin has-submenu" id="empMenu">
+                <div class="nav-link" onclick="toggleSubmenu('empMenu')">
+                    <i class="fa fa-users"></i> Employees <i class="fa fa-angle-down chevron"></i>
+                </div>
+                <ul class="submenu">
+                    <li>Directory</li>
+                    <li>Org Chart</li>
+                    <li>Onboarding</li>
+                </ul>
+            </li>
+            
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a></li>
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-clock-o"></i> Schedule</a></li>
+        </ul>
+
+        <div class="nav-group-label">Requests</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-plane"></i> Leave</a></li>
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-file-text-o"></i> Requests</a></li>
+        </ul>
+
+        <div class="nav-group-label">Communication</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-bullhorn"></i> Announcements</a></li>
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-envelope-o"></i> Messages</a></li>
+        </ul>
+
+        <div class="nav-group-label auth-admin">Talent & Growth</div>
+        <ul class="nav-list">
+            <li class="nav-item auth-admin"><a href="#" class="nav-link"><i class="fa fa-rocket"></i> Recruitment</a></li>
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-line-chart"></i> Performance</a></li>
+            <li class="nav-item auth-admin"><a href="#" class="nav-link"><i class="fa fa-graduation-cap"></i> Training</a></li>
+        </ul>
+
+        <div class="nav-group-label auth-super">Finance & Admin</div>
+        <ul class="nav-list">
+            <li class="nav-item auth-super"><a href="#" class="nav-link"><i class="fa fa-credit-card"></i> Payroll</a></li>
+            <li class="nav-item auth-super"><a href="#" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a></li>
+            <li class="nav-item auth-super"><a href="#" class="nav-link"><i class="fa fa-cog"></i> Settings</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <h3 style="font-size: 18px; font-weight: 700;">Dashboard</h3>
+        
+        <div style="display: flex; align-items: center;">
+            <select onchange="applyRole(this.value)" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; margin-right: 20px; outline: none; cursor: pointer;">
+                <option value="SuperAdmin">Super Admin</option>
+                <option value="Admin">Admin</option>
+                <option value="User">Employee</option>
+            </select>
+
+            <div class="profile-container" onclick="toggleDropdown('profileMenu')">
+                <div class="profile-info">
+                    <span class="name">Juan Dela Cruz</span>
+                    <span class="role-tag" id="profileRole">Super Admin</span>
+                </div>
+                <img src="https://i.pravatar.cc/150?u=juan" class="profile-img">
+                
+                <div class="dropdown-menu" id="profileMenu">
+                    <div class="nav-link" style="color: #334155; font-size: 13px;"><i class="fa fa-user-circle-o"></i> My Profile</div>
+                    <hr style="margin: 5px 0; border: 0; border-top: 1px solid #f1f5f9;">
+                    <div class="nav-link" style="color: #ef4444; font-size: 13px;"><i class="fa fa-sign-out"></i> Sign Out</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="card-grid">
+            <div class="stat-card"><h4>Total Employees</h4><div class="val">1,240</div></div>
+            <div class="stat-card"><h4>Attendance Rate</h4><div class="val" style="color: var(--accent);">98.2%</div></div>
+            <div class="stat-card"><h4>Active Requests</h4><div class="val">08</div></div>
+            <div class="stat-card auth-super"><h4>Payroll (MTD)</h4><div class="val">$124,500</div></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 2fr 1.2fr; gap: 25px; align-items: start;">
+            
+            <div class="table-box">
+                <div class="table-header">
+                    <h3 style="font-size: 15px; font-weight: 700;">Recent Activity</h3>
+                    <button style="font-size: 11px; padding: 6px 12px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer;">View All</button>
+                </div>
+                <table>
+                    <thead><tr><th>Name</th><th>Event</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>Liam Smith</b></td><td>Clock In</td><td><span style="color:var(--accent)">08:55 AM</span></td></tr>
+                        <tr><td><b>Maria Clara</b></td><td>Leave Request</td><td><span style="color:#f59e0b">Pending</span></td></tr>
+                        <tr><td><b>John Doe</b></td><td>Clock In</td><td><span style="color:var(--accent)">09:02 AM</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="miniChart"></canvas>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top:18px; font-weight: 700; letter-spacing: 1px;">HEADCOUNT BY DEPT</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+ 
+    function toggleSubmenu(id) { 
+        document.getElementById(id).classList.toggle('open'); 
+    }
+    
+   
+    function toggleDropdown(id) {
+        const m = document.getElementById(id);
+        m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    }
+
+
+    function applyRole(role) {
+        document.getElementById('profileRole').innerText = role === 'User' ? 'Employee' : (role === 'Admin' ? 'Admin' : 'Super Admin');
+        const admins = document.querySelectorAll('.auth-admin');
+        const supers = document.querySelectorAll('.auth-super');
+        
+        admins.forEach(el => el.style.display = 'none');
+        supers.forEach(el => el.style.display = 'none');
+
+        if(role === 'SuperAdmin') {
+            admins.forEach(el => el.style.display = 'block');
+            supers.forEach(el => el.style.display = 'block');
+        } else if (role === 'Admin') {
+            admins.forEach(el => el.style.display = 'block');
+        }
+    }
+
+    window.onload = () => {
+        applyRole('SuperAdmin');
+        
+   
+        new Chart(document.getElementById('miniChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['IT', 'HR', 'Ops'],
+                datasets: [{ 
+                    data: [55, 15, 30], 
+                    backgroundColor: ['#0f172a', '#10b981', '#e2e8f0'], 
+                    borderWidth: 4,
+                    borderColor: '#ffffff',
+                    hoverOffset: 4
+                }]
+            },
+            options: { 
+                cutout: '78%', 
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } } 
+            }
+        });
+    };
+
+  
+    window.onclick = (e) => {
+        if (!e.target.closest('.profile-container')) {
+            document.getElementById('profileMenu').style.display = 'none';
+        }
+    };
+</script>
+</body>
+</html>
