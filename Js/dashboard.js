@@ -1,4 +1,4 @@
-// --- CONFIGURATION ---
+
 const supabaseUrl = 'https://gsjnjktqqyxankennpau.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzam5qa3RxcXl4YW5rZW5ucGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzczMjksImV4cCI6MjA4OTkxMzMyOX0.ZrW8S0n3PkJJb_blIUkzgtav6REqPz6RI5zOniwR64E';
 const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -6,7 +6,7 @@ const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 let originalRole = 'User'; 
 let currentAppFilter = 'Pending';
 
-// --- INITIALIZATION ---
+
 async function initDashboard() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) { window.location.href = "index.html"; return; }
@@ -42,15 +42,15 @@ async function initDashboard() {
     }
 }
 
-// --- ROLE SWITCHER LOGIC (FIXED) ---
+
 function previewRole(role) {
-    // Update labels to show Preview Mode
+
     document.getElementById('userRole').innerText = role + " (Preview)";
     
-    // Toggle Sidebar visibility based on role
+    
     applyRoleUI(role);
     
-    // Reset view to Dashboard to ensure UI refreshes correctly
+   
     showSection('dashboard');
     
     console.log(`UI successfully switched to ${role} preview.`);
@@ -64,7 +64,7 @@ function applyRoleUI(role) {
     document.querySelectorAll('.auth-super').forEach(el => el.style.display = isSuper ? 'block' : 'none');
 }
 
-// --- NOTIFICATION SYSTEM (WITH ANIMATIONS) ---
+
 
 async function loadNotifications() {
     const { data: { user } } = await _supabase.auth.getUser();
@@ -92,7 +92,7 @@ async function loadNotifications() {
         const item = document.createElement('div');
         item.className = `notif-item ${n.is_read ? 'read' : 'unread'}`;
         
-        // Staggered entrance animation delay
+      
         item.style.animationDelay = `${index * 0.05}s`;
         
         item.innerHTML = `
@@ -110,11 +110,11 @@ function toggleNotifPanel() {
     const panel = document.getElementById('notifPanel');
     const bellIcon = document.querySelector('.notif-icon-container i');
     
-    // 1. Trigger Bell Animation
+ 
     bellIcon.classList.add('bell-animate');
     setTimeout(() => bellIcon.classList.remove('bell-animate'), 400);
 
-    // 2. Toggle Panel with Animation Class
+    
     const isOpening = !panel.classList.contains('show');
     
     if (isOpening) {
@@ -130,7 +130,7 @@ async function markAsRead(id) {
     if (!error) loadNotifications();
 }
 
-// Close panel when clicking outside
+
 document.addEventListener('click', (e) => {
     const panel = document.getElementById('notifPanel');
     const trigger = document.querySelector('.notif-icon-container');
@@ -139,7 +139,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- RECRUITMENT & AUTO-NOTIFY ---
+
 
 async function loadApplicants(statusFilter = 'Pending') {
     currentAppFilter = statusFilter;
@@ -189,7 +189,7 @@ async function approveApplicant(uid) {
     const { error } = await _supabase.from('applications').update({ status: 'Approved', role: 'User' }).eq('user_id', uid);
     
     if (!error) {
-        // AUTOMATIC NOTIFICATION
+     
         await _supabase.from('notifications').insert([{
             sender_id: user.id,
             receiver_id: uid,
@@ -222,7 +222,7 @@ async function rejectApplicant(uid) {
     }
 }
 
-// --- UI UTILS ---
+
 
 async function updateApplicantBadge() {
     const { count } = await _supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
