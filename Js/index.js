@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const togglePasswordBtn = document.querySelector('.password-toggle');
 
     _supabase.auth.onAuthStateChange(async (event, session) => {
-     
+    
         if (event === 'SIGNED_IN' && session) {
             const isManual = loginForm && loginForm.dataset.loading === "true";
             if (!isManual) {
@@ -52,8 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) await handleUserStatus(session.user);
-
-
     if (togglePasswordBtn) {
         togglePasswordBtn.addEventListener('click', () => {
             const isPass = passwordInput.getAttribute('type') === 'password';
@@ -64,7 +62,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-
     if (googleBtn) {
         googleBtn.addEventListener('click', async () => {
             const { error } = await _supabase.auth.signInWithOAuth({
@@ -74,8 +71,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (error) showToast(error.message, "error");
         });
     }
-
   
+
+
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -103,6 +102,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function handleUserStatus(user) {
         try {
         
+           
+
             const { data: appData, error: dbError } = await _supabase
                 .from('applications')
                 .select('status')
@@ -118,12 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-           
             if (appData.status === 'Approved') {
                 showToast("Access Granted. Redirecting...", "success");
                 setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
             } else {
-    
                 await _supabase.auth.signOut();
                 showToast(`Status: ${appData.status}. Access restricted.`, "info");
                 resetLoginUI();
@@ -135,4 +134,5 @@ document.addEventListener('DOMContentLoaded', async () => {
             resetLoginUI();
         }
     }
+
 });

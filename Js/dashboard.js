@@ -12,7 +12,6 @@ let currentRole = 'User';
 let actualUserRole = 'User'; 
 let attendanceChart, deptChart;
 
-
 async function initDashboard() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) { 
@@ -31,7 +30,6 @@ async function initDashboard() {
         const lName = profile.last_name || "";
         document.getElementById('userName').innerText = `${fName} ${lName}`;
         
-       
         const thumbEl = document.getElementById('userInitials');
         if (profile.avatar_url) {
             thumbEl.innerText = ""; 
@@ -53,6 +51,8 @@ async function initDashboard() {
             if (tools) tools.style.display = 'flex';
         }
 
+        
+        setupRecruitmentBadgeRealtime();
         loadNotifications();
     } else {
         await _supabase.auth.signOut();
@@ -61,12 +61,41 @@ async function initDashboard() {
 }
 
 
+function setupRecruitmentBadgeRealtime() {
+   
+    _supabase
+        .channel('public:applications')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, () => {
+            updateRecruitmentBadge();
+        })
+        .subscribe();
+
+    updateRecruitmentBadge(); 
+}
+
+async function updateRecruitmentBadge() {
+    
+    if (currentRole === 'User') return;
+
+    const { count, error } = await _supabase
+        .from('applications')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Pending');
+
+    const badge = document.getElementById('badge-count');
+    if (badge) {
+        if (count > 0) {
+            badge.innerText = count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
 async function getFinancialStats() {
     const now = new Date();
     const firstDayMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-
-   
     const { data: payrollData } = await _supabase
         .from('payroll')
         .select('amount')
@@ -74,7 +103,6 @@ async function getFinancialStats() {
     
     const totalPayroll = payrollData?.reduce((sum, item) => sum + item.amount, 0) || 0;
 
-    
     const { count: currentCount } = await _supabase
         .from('applications')
         .select('*', { count: 'exact', head: true })
@@ -98,7 +126,6 @@ async function getFinancialStats() {
     };
 }
 
-
 async function applyRoleUI(role, userId) {
     const isAdmin = (role === 'Admin' || role === 'SuperAdmin');
     const isSuper = (role === 'SuperAdmin');
@@ -114,6 +141,9 @@ async function applyRoleUI(role, userId) {
     renderContentLayout(role);
     fetchRecentActivity(role, userId);
     initCharts(role);
+    
+   
+    updateRecruitmentBadge();
 }
 
 window.previewRole = function(roleValue) {
@@ -129,7 +159,7 @@ async function renderStats(role, userId) {
         const { count: emps } = await _supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Approved');
         const { count: depts } = await _supabase.from('departments').select('*', { count: 'exact', head: true });
         const { count: alerts } = await _supabase.from('leave_requests').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
-        const financials = await getFinancialStats(); // Real Payroll & Growth
+        const financials = await getFinancialStats();
 
         container.innerHTML = `
             <div class="stat-card-new"><div class="icon-box blue"><i class="fa fa-users"></i></div><div class="details"><span>Total Employees</span><h2>${emps || 0}</h2></div></div>
@@ -148,7 +178,6 @@ async function renderStats(role, userId) {
             <div class="stat-card-new"><div class="icon-box purple"><i class="fa fa-envelope-open"></i></div><div class="details"><span>Pending Leaves</span><h2>${alerts || 0}</h2></div></div>
         `;
     } else {
-        // Dynamic Employee Stats
         const { data: att } = await _supabase.from('attendance').select('status').eq('user_id', userId);
         const { data: bal } = await _supabase.from('leave_balances').select('remaining').eq('user_id', userId).single();
         const pct = att?.length ? Math.round((att.filter(a => a.status === 'On Time').length / att.length) * 100) : 0;
@@ -159,7 +188,6 @@ async function renderStats(role, userId) {
         `;
     }
 }
-
 
 async function fetchRecentActivity(role, userId) {
     const body = document.getElementById('activity-body');
@@ -210,7 +238,6 @@ function initCharts(role) {
         });
     }
 }
-
 
 function renderQuickActions(role) {
     const list = document.getElementById('actions-list');
