@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Enterprise Login</title>
+    <link rel="stylesheet" href="./Css/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="split-container">
+        
+        <aside class="branding-section">
+            <div class="branding-content">
+                <div class="logo-wrapper">
+                    <img src="Icon2.png" alt="HRMS Logo" class="brand-logo" style="border-radius: 50%;">
+                </div>
+                
+                <h1 class="brand-title">Empowering Your <br><span>Workforce.</span></h1>
+                <p class="brand-tagline">
+                    The complete Human Resources Management System for modern teams. 
+                    Manage your identity, payroll, and growth in one place.
+                </p>
+
+                <div class="visual-footer">
+                    <div class="badge">
+                        <span class="pulse"></span>
+                        Secure Access Enabled
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="login-section">
+            <div class="login-card">
+                <header class="login-header">
+                    <h2>Welcome Back</h2>
+                    <p>Enter your details to access the HR Portal</p>
+                </header>
+
+                <form class="login-form">
+                    <div class="input-group">
+                        <label for="email">Work Email</label>
+                        <input type="email" id="email" placeholder="e.g., juandelacruz@gmail.com" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="form-actions">
+                        <label class="checkbox-container">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Sign In</button>
+
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+
+                    <button type="button" class="btn-google">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/EA">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                        <path d="M3.964 10.706c-.18-.54-.282-1.119-.282-1.706s.102-1.166.282-1.706V4.962H.957C.347 6.177 0 7.55 0 9s.347 2.823.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.483 0 2.443 2.017.957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                    </svg>
+                    Continue with Google
+                </button>
+                </form>
+
+                <footer class="login-footer">
+                    <p>Don't have an account? <a href="register.html" id="to-register">Create an account</a></p>
+                    
+                    <div class="copyright-notice">
+                        © 2026 Human Resource Management System
+                    </div>
+                </footer>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="./Js/index.js"></script>
+</body>
+</html>

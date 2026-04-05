@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Job Application</title>
+
+    <link rel="stylesheet" href="./Css/register.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="full-page-bg">
+
+<header class="site-header">
+    <div class="container-wide">
+        <div class="header-brand">
+            <img src="Icon2.png" class="nav-logo">
+            <span class="nav-brand-name">Human Resource Management System</span>
+        </div>
+
+        <div class="header-right">
+            <span class="nav-text">Already applied?</span>
+            <a href="index.html" class="login-link-btn">Sign In</a>
+        </div>
+    </div>
+</header>
+
+<main class="registration-container">
+    <div class="form-card">
+
+        <div class="form-title">
+            <h2>Job Application Form</h2>
+            <p>Submit your application and create your portal account.</p>
+        </div>
+
+        <form id="applicationForm">
+            <div class="form-split">
+              
+                <div class="column">
+                    <h3 class="section-label">
+                        <span class="label-icon monogram">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </span>
+                        Personal & Account
+                    </h3>
+
+                    <div class="input-group">
+                        <label>First Name</label>
+                        <input type="text" id="firstName" placeholder="e.g. Juan" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Last Name</label>
+                        <input type="text" id="lastName" placeholder="e.g. Dela Cruz" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" placeholder="work@gmail.com" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="password" required>
+                            <button type="button" class="password-toggle">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmPassword" required>
+                            <button type="button" class="password-toggle">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Contact Number</label>
+                        <input type="tel" id="contact" placeholder="+63 XXX XXX XXXX" required>
+                    </div>
+                </div>
+
+                <div class="vertical-divider"></div>
+
+                <div class="column">
+                    <h3 class="section-label">
+                        <span class="label-icon monogram">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                        </span>
+                        Application Details
+                    </h3>
+
+                    <div class="input-group">
+                        <label>Position Applied</label>
+                        <input type="text" id="position" placeholder="e.g. Web Developer" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Preferred Department</label>
+                        <select id="department" required>
+                            <option value="" disabled selected>Select Department</option>
+                            <option value="IT">Information Technology</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Finance">Finance</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Upload Resume</label>
+                        <div class="upload-container">
+                            <label for="resume" class="custom-file-upload">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span style="position: relative; top: -0.2rem; left: 5px;">Choose PDF or Image</span>
+                            </label>
+                            <input type="file" id="resume" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required>
+                        </div>
+                        <img id="preview" style="margin-top:10px; max-width:100%; height:auto; display:none; border-radius:8px; border: 1px solid var(--border);">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Short Introduction</label>
+                        <textarea id="intro" rows="4" placeholder="Tell us about yourself..." required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-submit">
+                <button type="submit" class="register-full-btn">
+                    Submit Application
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer class="site-footer">
+    <div class="container-wide">
+        <p>© 2026 Human Resource Management System</p>
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms</a>
+            <a href="#">Help</a>
+        </div>
+    </div>
+</footer>
+
+<script src="./Js/register.js"></script>
+
+</body>
+</html>
