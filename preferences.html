@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Preferences</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    <link rel="stylesheet" href="./Css/dashboard.css">
+    <link rel="stylesheet" href="./Css/preferences.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><img src="Icon2.png" alt="Logo"> HRMS</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+        <div class="nav-group-label">Core</div>
+        <div class="nav-item">
+            <a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a>
+        </div>
+        <div class="nav-item"><a href="attendance.html" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a></div>
+        <div class="nav-item"><a href="schedule.html" class="nav-link"><i class="fa fa-clock-o"></i> Schedule</a></div>
+
+        <div class="nav-group-label">Requests</div>
+        <div class="nav-item"><a href="leave.html" class="nav-link"><i class="fa fa-plane"></i> Leave</a></div>
+        <div class="nav-item"><a href="my-request.html" class="nav-link"><i class="fa fa-file-text-o"></i> My Requests</a></div>
+
+        <div class="nav-group-label">Communication</div>
+        <div class="nav-item"><a href="announcement.html" class="nav-link"><i class="fa fa-bullhorn"></i> Announcements</a></div>
+        <div class="nav-item"><a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages</a></div>
+
+        <div class="auth-admin">
+            <div class="nav-group-label">Talent & Growth</div>
+            <div class="nav-item"><a href="directory.html" class="nav-link"><i class="fa fa-users"></i> Directory</a></div>
+            <div class="nav-item" id="nav-recruitment">
+                <a href="recruitment.html" class="nav-link">
+                    <i class="fa fa-rocket"></i> Recruitment 
+                    <span id="badge-count" class="badge-notif" style="display: none;">0</span>
+                </a>
+            </div>
+            <div class="nav-item"><a href="training.html" class="nav-link"><i class="fa fa-graduation-cap"></i> Training</a></div>
+        </div>
+
+        <div class="auth-super">
+            <div class="nav-group-label">Finance & Admin</div>
+            <div class="nav-item"><a href="payroll.html" class="nav-link"><i class="fa fa-credit-card"></i> Payroll</a></div>
+            <div class="nav-item"><a href="reports.html" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a></div>
+            <div class="nav-item"><a href="settings.html" class="nav-link"><i class="fa fa-cog"></i> Settings</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <header class="topbar">
+        <h3 id="topbar-title" style="font-size: 18px; font-weight: 700;">Settings & Preferences</h3>
+        
+        <div class="topbar-right">
+            <div class="notif-wrapper">
+                <div class="notif-icon-container" onclick="toggleNotifPanel()">
+                    <i class="fa fa-bell-o"></i>
+                    <span id="notif-badge" class="badge-notif" style="display:none;">0</span>
+                </div>
+                
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header"><span>Notifications</span></div>
+                    <div id="notif-list" class="notif-list">
+                        <div class="notif-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="role-switcher-wrapper" id="superAdminTools" style="display: none;">
+                <select id="roleSwitcher" onchange="previewRole(this.value)">
+                    <option value="SuperAdmin">CEO(SuperAdmin)</option>
+                    <option value="Admin">Manager(Admin)</option>
+                    <option value="User">Employee(User)</option>
+                </select>
+            </div>
+
+            <div class="profile-trigger" onclick="toggleDropdown()">
+                <div class="profile-info">
+                    <span class="profile-name" id="userName">Loading...</span>
+                    <span class="profile-role" id="userRole">...</span>
+                </div>
+                <div class="profile-thumb" id="userInitials">--</div>
+                
+                <div class="dropdown-menu" id="profileMenu">
+                    <a href="profile.html" class="dropdown-item"><i class="fa fa-user-circle-o"></i> My Profile</a>
+                    <a href="preferences.html" class="dropdown-item"><i class="fa fa-cog"></i> Preferences</a>
+                    <hr style="margin: 5px 0; border: 0; border-top: 1px solid #f1f5f9;">
+                    <div class="dropdown-item" style="color: #ef4444;" onclick="handleSignOut()">
+                        <i class="fa fa-sign-out"></i> Sign Out
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="pref-flat-container">
+            <form id="preferencesForm">
+                
+                <section class="pref-category">
+                    <div class="category-header">
+                        <i class="fa fa-paint-brush"></i>
+                        <span>Appearance</span>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-desc">
+                            <label>Theme Mode</label>
+                            <p>Switch between light and dark visual interfaces.</p>
+                        </div>
+                        <select id="pref-theme" class="pref-input-field">
+                            <option value="light">Light Mode</option>
+                            <option value="dark">Dark Mode</option>
+                        </select>
+                    </div>
+                    <hr class="category-divider">
+                </section>
+
+                <section class="pref-category">
+                    <div class="category-header">
+                        <i class="fa fa-bell"></i>
+                        <span>Notification</span>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-desc">
+                            <label>Email Updates</label>
+                            <p>Receive notifications for request status changes.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="pref-email-notif">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <hr class="category-divider">
+                </section>
+
+                <section class="pref-category">
+                    <div class="category-header">
+                        <i class="fa fa-lock"></i>
+                        <span>Security</span>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-desc">
+                            <label>Account Password</label>
+                            <p>Request a secure password reset link via email.</p>
+                        </div>
+                        <button type="button" class="btn-action-outline" onclick="triggerPasswordReset()">Reset Password</button>
+                    </div>
+                    <hr class="category-divider">
+                </section>
+
+                <section class="pref-category">
+                    <div class="category-header">
+                        <i class="fa fa-clock-o"></i>
+                        <span>Work & Time</span>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-desc">
+                            <label>Default Timezone</label>
+                            <p>Adjust logs to your local region settings.</p>
+                        </div>
+                        <select id="pref-timezone" class="pref-input-field">
+                            <option value="UTC-12">(UTC-12:00) International Date Line West</option>
+                            <option value="UTC-11">(UTC-11:00) Midway Island, Samoa</option>
+                            <option value="UTC-10">(UTC-10:00) Hawaii</option>
+                            <option value="UTC-9">(UTC-09:00) Alaska</option>
+                            <option value="UTC-8">(UTC-08:00) Pacific Time (US & Canada)</option>
+                            <option value="UTC-7">(UTC-07:00) Mountain Time (US & Canada)</option>
+                            <option value="UTC-6">(UTC-06:00) Central Time (US & Canada)</option>
+                            <option value="UTC-5">(UTC-05:00) Eastern Time (US & Canada)</option>
+                            <option value="UTC-4">(UTC-04:00) Atlantic Time (Canada), Caracas</option>
+                            <option value="UTC-3">(UTC-03:00) Brazil, Buenos Aires, Greenland</option>
+                            <option value="UTC-2">(UTC-02:00) Mid-Atlantic</option>
+                            <option value="UTC-1">(UTC-01:00) Azores, Cape Verde Islands</option>
+                            <option value="UTC+0">(UTC+00:00) Western Europe Time, London, Lisbon</option>
+                            <option value="UTC+1">(UTC+01:00) Central European Time, Berlin, Paris</option>
+                            <option value="UTC+2">(UTC+02:00) Eastern European Time, Cairo, Helsinki</option>
+                            <option value="UTC+3">(UTC+03:00) Moscow, Baghdad, Nairobi</option>
+                            <option value="UTC+3.5">(UTC+03:30) Tehran</option>
+                            <option value="UTC+4">(UTC+04:00) Abu Dhabi, Muscat, Baku</option>
+                            <option value="UTC+4.5">(UTC+04:30) Kabul</option>
+                            <option value="UTC+5">(UTC+05:00) Ekaterinburg, Islamabad, Karachi</option>
+                            <option value="UTC+5.5">(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi</option>
+                            <option value="UTC+5.75">(UTC+05:45) Kathmandu</option>
+                            <option value="UTC+6">(UTC+06:00) Almaty, Dhaka, Novosibirsk</option>
+                            <option value="UTC+6.5">(UTC+06:30) Yangon (Rangoon)</option>
+                            <option value="UTC+7">(UTC+07:00) Bangkok, Hanoi, Jakarta</option>
+                            <option value="UTC+8" selected>(UTC+08:00) Beijing, Hong Kong, Manila, Singapore</option>
+                            <option value="UTC+9">(UTC+09:00) Osaka, Sapporo, Tokyo, Seoul</option>
+                            <option value="UTC+9.5">(UTC+09:30) Adelaide, Darwin</option>
+                            <option value="UTC+10">(UTC+10:00) Brisbane, Canberra, Melbourne, Sydney</option>
+                            <option value="UTC+11">(UTC+11:00) Magadan, Solomon Islands, New Caledonia</option>
+                            <option value="UTC+12">(UTC+12:00) Auckland, Wellington, Fiji</option>
+                            <option value="UTC+13">(UTC+13:00) Nuku'alofa</option>
+                        </select>
+                    </div>
+                    <div class="setting-row" style="margin-top: 20px;">
+                        <div class="setting-desc">
+                            <label>Time Format</label>
+                            <p>Choose your preferred clock display.</p>
+                        </div>
+                        <select id="pref-timeformat" class="pref-input-field">
+                            <option value="12h">12-Hour (AM/PM)</option>
+                            <option value="24h">24-Hour</option>
+                        </select>
+                    </div>
+                </section>
+
+                <div class="form-submit-container">
+                    <button type="submit" class="btn-action-approve">Save All Changes</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script src="./Js/dashboard.js"></script>
+<script src="./Js/profile.js"></script> 
+<script src="./Js/preferences.js"></script>
+
+</body>
+</html>

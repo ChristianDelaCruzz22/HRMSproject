@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Recruitment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    <link rel="stylesheet" href="./Css/recruitment.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><img src="Icon2.png" alt="Logo"> HRMS</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+        <div class="nav-group-label">Core</div>
+        <div class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a></div>
+        <div class="nav-item"><a href="attendance.html" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a></div>
+        <div class="nav-item"><a href="schedule.html" class="nav-link"><i class="fa fa-clock-o"></i> Schedule</a></div>
+
+        <div class="nav-group-label">Requests</div>
+        <div class="nav-item"><a href="leave.html" class="nav-link"><i class="fa fa-plane"></i> Leave</a></div>
+        <div class="nav-item"><a href="my-request.html" class="nav-link"><i class="fa fa-file-text-o"></i> My Requests</a></div>
+
+        <div class="nav-group-label">Communication</div>
+        <div class="nav-item"><a href="announcement.html" class="nav-link"><i class="fa fa-bullhorn"></i> Announcements</a></div>
+        <div class="nav-item"><a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages</a></div>
+
+        <div class="auth-admin">
+            <div class="nav-group-label">Talent & Growth</div>
+            <div class="nav-item"><a href="directory.html" class="nav-link"><i class="fa fa-users"></i> Directory</a></div>
+            <div class="nav-item active">
+                <a href="Recruitment.html" class="nav-link">
+                    <i class="fa fa-rocket"></i> Recruitment 
+                    <span id="badge-count" class="badge-notif" style="display:none;">0</span>
+                </a>
+            </div>
+            <div class="nav-item"><a href="training.html" class="nav-link"><i class="fa fa-graduation-cap"></i> Training</a></div>
+        </div>
+
+        <div class="auth-super">
+            <div class="nav-group-label">Finance & Admin</div>
+            <div class="nav-item"><a href="payroll.html" class="nav-link"><i class="fa fa-credit-card"></i> Payroll</a></div>
+            <div class="nav-item"><a href="reports.html" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a></div>
+            <div class="nav-item"><a href="settings.html" class="nav-link"><i class="fa fa-cog"></i> Settings</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <header class="topbar">
+        <h3 id="topbar-title" style="font-size: 18px; font-weight: 700;">Recruitment Management</h3>
+        
+        <div class="topbar-right">
+            <div class="notif-wrapper">
+                <div class="notif-icon-container" onclick="toggleNotifPanel()">
+                    <i class="fa fa-bell-o"></i>
+                    <span id="notif-badge" class="badge-notif" style="display:none; position: absolute; 
+                            top: -2px; 
+                            right: -2px; 
+                            background-color: #ef4444; 
+                            color: white; 
+                            font-size: 10px; 
+                            font-weight: 800; 
+                            width: 18px; 
+                            height: 18px; 
+                            border-radius: 50%; 
+                            border: 2px solid white; 
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            padding: 0 !important; 
+                            margin: 0 !important;
+                            line-height: 1.5 !important;
+                            text-align: center !important;
+                            z-index: 10; 
+                            pointer-events: none;">0</span>
+                </div>
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header"><span>Notifications</span></div>
+                    <div id="notif-list" class="notif-list"><div class="notif-empty">No new notifications</div></div>
+                </div>
+            </div>
+
+            <div class="role-switcher-wrapper" id="superAdminTools" style="display: none;">
+                <select id="roleSwitcher" onchange="previewRole(this.value)">
+                    <option value="SuperAdmin">CEO(SuperAdmin)</option>
+                    <option value="Admin">Manager(Admin)</option>
+                    <option value="User">Employee(User)</option>
+                </select>
+            </div>
+
+            <div class="profile-trigger" onclick="toggleDropdown()">
+                <div class="profile-info">
+                    <span class="profile-name" id="userName">Loading...</span>
+                    <span class="profile-role" id="userRole">...</span>
+                </div>
+                <div class="profile-thumb" id="userInitials">--</div>
+                <div class="dropdown-menu" id="profileMenu">
+                    <a href="profile.html" class="dropdown-item">
+                        <i class="fa fa-user-circle-o"></i> My Profile
+                    </a>
+                    
+                    <a href="preferences.html" class="dropdown-item">
+                        <i class="fa fa-cog"></i> Preferences
+                    </a>
+
+                    <hr style="margin: 5px 0; border: 0; border-top: 1px solid #f1f5f9;">
+                    
+                    <div class="dropdown-item" style="color: #ef4444;" onclick="handleSignOut()">
+                        <i class="fa fa-sign-out"></i> Sign Out
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="filter-tabs">
+            <button id="btn-pending" onclick="loadApplicants('Pending')" class="filter-btn active">Pending</button>
+            <button id="btn-approved" onclick="loadApplicants('Approved')" class="filter-btn">Approved</button>
+            <button id="btn-rejected" onclick="loadApplicants('Rejected')" class="filter-btn">Rejected</button>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Applicant Details</th>
+                        <th>Position</th>
+                        <th>Date Applied</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="applicants-list"></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script src="./Js/Recruitment.js"></script>
+</body>
+</html>
