@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   
     const { data: profile } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('*')
         .eq('user_id', session.user.id)
         .single();
@@ -91,7 +91,7 @@ async function loadApplicants(status) {
     list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:#64748b;">Loading...</td></tr>';
 
     const { data, error } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('*')
         .eq('status', status)
         .order('created_at', { ascending: false });
@@ -150,7 +150,7 @@ async function handleAction(uid, newStatus) {
     const roleToAssign = newStatus === 'Approved' ? 'User' : null;
 
     const { error } = await _supabase
-        .from('applications')
+        .from('employees')
         .update({ status: newStatus, role: roleToAssign })
         .eq('user_id', uid);
 
@@ -184,7 +184,7 @@ async function handleAction(uid, newStatus) {
 
 async function updateBadge() {
     const { count } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Pending');
 

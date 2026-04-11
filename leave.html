@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS - Leave Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./Css/leave.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/png" href="Icon2.png">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><img src="Icon2.png" alt="Logo"> HRMS</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+        <div class="nav-group-label">Core</div>
+        <div class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a></div>
+        <div class="nav-item"><a href="attendance.html" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a></div>
+        <div class="nav-item"><a href="schedule.html" class="nav-link"><i class="fa fa-clock-o"></i> Schedule</a></div>
+
+        <div class="nav-group-label">Requests</div>
+        <div class="nav-item active"><a href="leave.html" class="nav-link"><i class="fa fa-plane"></i> Leave</a></div>
+        <div class="nav-item"><a href="my-request.html" class="nav-link"><i class="fa fa-file-text-o"></i> My Requests</a></div>
+
+        <div class="nav-group-label">Communication</div>
+        <div class="nav-item"><a href="announcement.html" class="nav-link"><i class="fa fa-bullhorn"></i> Announcements</a></div>
+        <div class="nav-item"><a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages</a></div>
+
+        <div class="auth-admin">
+            <div class="nav-group-label">Talent & Growth</div>
+            <div class="nav-item"><a href="employee-management.html" class="nav-link"><i class="fa fa-id-badge"></i> Employee Management</a></div>
+            <div class="nav-item"><a href="directory.html" class="nav-link"><i class="fa fa-users"></i> Directory</a></div>
+            <div class="nav-item"><a href="departments.html" class="nav-link"><i class="fa fa-sitemap"></i> Departments</a></div>
+            <div class="nav-item">
+                <a href="recruitment.html" class="nav-link">
+                    <i class="fa fa-rocket"></i> Recruitment 
+                    <span id="badge-count" class="badge-notif" style="display: none;">0</span>
+                </a>
+            </div>
+            <div class="nav-item"><a href="training.html" class="nav-link"><i class="fa fa-graduation-cap"></i> Training</a></div>
+        </div>
+        <div class="auth-super">
+            <div class="nav-group-label">Finance & Admin</div>
+            <div class="nav-item"><a href="payroll.html" class="nav-link"><i class="fa fa-credit-card"></i> Payroll</a></div>
+            <div class="nav-item"><a href="reports.html" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a></div>
+            <div class="nav-item"><a href="settings.html" class="nav-link"><i class="fa fa-cog"></i> Settings</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <header class="topbar">
+        <h3 id="topbar-title">Work Station</h3>
+        
+        <div class="topbar-right">
+            <div class="notif-wrapper">
+                <div class="notif-icon-container" onclick="toggleNotifPanel()">
+                    <i class="fa fa-bell-o"></i>
+                    <span id="notif-badge" class="badge-notif" style="display:none;">0</span>
+                </div>
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header"><span>Notifications</span></div>
+                    <div id="notif-list" class="notif-list">
+                        <div class="notif-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="role-switcher-wrapper" id="superAdminTools" style="display: none;">
+                <select id="roleSwitcher" onchange="previewRole(this.value)">
+                    <option value="SuperAdmin">CEO (SuperAdmin)</option>
+                    <option value="Admin">Manager (Admin)</option>
+                    <option value="User">Employee (User)</option>
+                </select>
+            </div>
+
+            <div class="profile-trigger" onclick="toggleDropdown()">
+                <div class="profile-info">
+                    <span class="profile-name" id="userName">Loading...</span>
+                    <span class="profile-role" id="userRole">...</span>
+                </div>
+                <div class="profile-thumb" id="userInitials">--</div>
+                
+                <div class="dropdown-menu" id="profileMenu">
+                    <a href="profile.html" class="dropdown-item"><i class="fa fa-user-circle-o"></i> My Profile</a>
+                    <a href="preferences.html" class="dropdown-item"><i class="fa fa-cog"></i> Preferences</a>
+                    <hr style="margin: 5px 0; border: 0; border-top: 1px solid #f1f5f9;">
+                    <div class="dropdown-item" style="color: #ef4444;" onclick="handleSignOut()">
+                        <i class="fa fa-sign-out"></i> Sign Out
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-content">
+        <div class="leave-balance-row">
+            <div class="balance-card">
+                <div class="bal-icon"><i class="fa fa-plane"></i></div>
+                <div class="bal-details">
+                    <p>Vacation Leave</p>
+                    <h3><span id="vl-rem">0</span></h3>
+                    <small><span id="vl-used">0</span> days used</small>
+                </div>
+            </div>
+            
+            <div class="balance-card">
+                <div class="bal-icon" style="background: #e3f2fd; color: #1e88e5;"><i class="fa fa-medkit"></i></div>
+                <div class="bal-details">
+                    <p>Sick Leave</p>
+                    <h3><span id="sl-rem">0</span></h3>
+                    <small><span id="sl-used">0</span> days used</small>
+                </div>
+            </div>
+            
+            <div class="balance-card">
+                <div class="bal-icon" style="background: #fff3e0; color: #fb8c00;"><i class="fa fa-warning"></i></div>
+                <div class="bal-details">
+                    <p>Emergency Leave</p>
+                    <h3><span id="el-rem">0</span></h3>
+                    <small><span id="el-used">0</span> days used</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="leave-main-grid">
+            
+            <div class="leave-card">
+                <div class="card-header">
+                    <h4>Apply for Leave</h4>
+                </div>
+                <form id="leaveForm" class="leave-form">
+                    <div class="form-group">
+                        <label>Leave Type</label>
+                        <select id="leaveType" required>
+                            <option value="Vacation">Vacation Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Emergency">Emergency Leave</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="date" id="startDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="date" id="endDate" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Reason</label>
+                        <textarea id="leaveReason" placeholder="State your reason for leave..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit">Submit Leave Request</button>
+                </form>
+            </div>
+
+            <div class="leave-card">
+                <div class="card-header">
+                    <h4>My Leave History</h4>
+                </div>
+                <div class="table-container">
+                    <table class="leave-table">
+                        <thead>
+                            <tr>
+                                <th>TYPE</th>
+                                <th>DATES</th>
+                                <th>DAYS</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myLeaveTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-leave-panel" class="leave-card admin-panel" style="display:none; margin-top: 25px;">
+            <div class="card-header">
+                <h4><i class="fa fa-shield"></i> Pending Review (Admin)</h4>
+            </div>
+            <div class="table-container">
+                <table class="leave-table">
+                    <thead>
+                        <tr>
+                            <th>Employee Name</th>
+                            <th>Leave Type</th>
+                            <th>Dates</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminLeaveTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin-leave-panel" class="leave-card admin-panel" style="display:none; margin-top: 25px;">
+            <div class="card-header">
+                <h4><i class="fa fa-shield"></i> Pending Review (Admin)</h4>
+            </div>
+            <div class="table-container">
+                <table class="leave-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Type</th>
+                            <th>Dates</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminLeaveTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="./Js/leave.js"></script>
+<script src="./Js/dashboard.js"></script>
+</body>
+</html>

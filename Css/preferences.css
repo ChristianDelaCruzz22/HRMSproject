@@ -21,13 +21,12 @@
     box-sizing: border-box; 
     font-family: 'Inter', -apple-system, sans-serif; 
 }
-/* ======================================== */
+
 body.dark-mode {
-    /* Dark Mode (Matching your screenshot) */
-    --bg: #0f172a;        /* Deep background */
-    --card-bg: #1e293b;   /* Slightly lighter card */
-    --primary: #f1f5f9;   /* Bright text */
-    --text-muted: #94a3b8; /* Dimmed text */
+    --bg: #0f172a;        
+    --card-bg: #1e293b;   
+    --primary: #f1f5f9;   
+    --text-muted: #94a3b8; 
     --border-color: #334155;
     --input-bg: #1e293b;
 }
@@ -48,7 +47,7 @@ body {
     border-radius: 12px;
 }
 
-/* Category Headers */
+
 .category-header {
     display: flex;
     align-items: center;
@@ -61,16 +60,16 @@ body {
     font-size: 1.2rem;
 }
 
-/* Horizontal Line */
+
 .category-divider {
     border: 0;
     border-top: 1px solid var(--border-color);
     margin: 25px 0;
 }
 
-/* Select Inputs in Dark Mode */
+
 .pref-input-field {
-    background-color: var(--bg); /* Matches the outer background for depth */
+    background-color: var(--bg); 
     color: var(--primary);
     border: 1px solid var(--border-color);
     padding: 8px 12px;
@@ -83,7 +82,7 @@ body {
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 0.025em;
-    opacity: 0.9; /* Slightly softer than pure white */
+    opacity: 0.9; 
 }
 
 .setting-desc p {
@@ -91,7 +90,7 @@ body {
     font-size: 0.8rem;
 }
 
-/* ================================== */
+
 
 
 .sidebar { 
@@ -1578,7 +1577,7 @@ input, select, textarea {
 }
 
 input:checked + .slider {
-    background-color: #10b981; /* Success Green */
+    background-color: #10b981; 
 }
 
 input:checked + .slider:before {

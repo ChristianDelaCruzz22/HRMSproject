@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadUserSettings(userId) {
     const { data, error } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('theme_preference, email_notifications, timezone, time_format')
         .eq('user_id', userId)
         .single();
@@ -66,7 +66,7 @@ async function saveUserSettings(userId) {
     };
 
     const { error } = await _supabase
-        .from('applications')
+        .from('employees')
         .update(settings)
         .eq('user_id', userId);
 

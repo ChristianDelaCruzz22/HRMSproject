@@ -8,7 +8,6 @@ const ROLE_NAMES = {
     'User': 'Employee' 
 };
 
-
 document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await _supabase.auth.getSession();
     
@@ -17,14 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return; 
     }
 
-  
     updateElement('session-email', session.user.email); 
     updateElement('p-email-display', session.user.email); 
     updateElement('p-password-display', '••••••••••••');
 
-    
     const { data: profile, error } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('*')
         .eq('user_id', session.user.id)
         .single();
@@ -37,11 +34,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (profile) {
         populateProfileUI(profile);
         applyRolePermissions(profile.role); 
-        loadNotifications(); // <--- This will now populate the list
+        loadNotifications(); 
         updateApplicantBadge();
     }
 });
-
 
 function populateProfileUI(p) {
     const fName = p.first_name || "User";
@@ -63,9 +59,10 @@ function populateProfileUI(p) {
     updateElement('disp-pos-dept', `${p.position || 'Staff'} | ${p.department || 'Operations'}`);
 
     updateElement('p-empid', `EMP-2026-${p.id}`);
+    updateElement('p-gender', p.gender || 'Not Provided'); 
     updateElement('p-contact', p.contact || 'Not Provided'); 
     updateElement('p-address', p.address || 'Not Provided');
-    updateElement('p-dob', p.dob || 'Not Provided');
+    updateElement('p-dob', p.birthday || 'Not Provided');
     updateElement('p-dept', p.department || 'General');
     updateElement('p-location', p.work_location || 'On-site');
     updateElement('p-hired', p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A');
@@ -98,7 +95,6 @@ function populateProfileUI(p) {
         `;
     }
 }
-
 
 function applyRolePermissions(role) {
     const isAdmin = (role === 'Admin' || role === 'SuperAdmin');
@@ -133,7 +129,6 @@ function previewRole(val) {
     }
 }
 
-
 function openEditModal() {
     updateElement('modalInitials', document.getElementById('mainInitials').innerText);
     updateElement('view-empid', document.getElementById('p-empid').innerText);
@@ -144,6 +139,7 @@ function openEditModal() {
     document.getElementById('edit-fname').value = fullNameParts[0] || '';
     document.getElementById('edit-lname').value = fullNameParts.slice(1).join(' ') || '';
     
+    document.getElementById('edit-gender').value = document.getElementById('p-gender').innerText.replace('Not Provided', '');
     document.getElementById('edit-contact').value = document.getElementById('p-contact').innerText.replace('Not Provided', '');
     document.getElementById('edit-address').value = document.getElementById('p-address').innerText.replace('Not Provided', '');
     document.getElementById('edit-dept').value = document.getElementById('p-dept').innerText;
@@ -182,9 +178,10 @@ document.getElementById('editProfileForm').onsubmit = async (e) => {
         const updates = {
             first_name: document.getElementById('edit-fname').value,
             last_name: document.getElementById('edit-lname').value,
+            gender: document.getElementById('edit-gender').value,
             contact: document.getElementById('edit-contact').value,
             address: document.getElementById('edit-address').value,
-            dob: document.getElementById('edit-dob').value,
+            birthday: document.getElementById('edit-dob').value,
             department: document.getElementById('edit-dept').value,
             work_location: document.getElementById('edit-location').value,
             updated_at: new Date()
@@ -192,7 +189,7 @@ document.getElementById('editProfileForm').onsubmit = async (e) => {
 
         if (publicUrl) updates.avatar_url = publicUrl;
 
-        const { error } = await _supabase.from('applications').update(updates).eq('user_id', session.user.id);
+        const { error } = await _supabase.from('employees').update(updates).eq('user_id', session.user.id);
         if (error) throw error;
 
         showToast("Profile Updated", "Changes saved successfully.", "success");
@@ -202,7 +199,6 @@ document.getElementById('editProfileForm').onsubmit = async (e) => {
         showToast("Update Error", error.message, "error");
     }
 };
-
 
 function updateElement(id, text) {
     const el = document.getElementById(id);
@@ -270,7 +266,6 @@ function showToast(title, message, type = 'success') {
     }, 4000);
 }
 
-
 async function handleSignOut() { await _supabase.auth.signOut(); window.location.href = "index.html"; }
 function toggleDropdown() { document.getElementById('profileMenu')?.classList.toggle('show'); }
 function toggleNotifPanel() { 
@@ -282,11 +277,10 @@ function toggleNotifPanel() {
 }
 
 async function updateApplicantBadge() {
-    const { count } = await _supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
+    const { count } = await _supabase.from('employees').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
     const badge = document.getElementById('badge-count');
     if (badge) { badge.innerText = count || 0; badge.style.display = count > 0 ? 'inline-block' : 'none'; }
 }
-
 
 async function loadNotifications() {
     const { data: { user } } = await _supabase.auth.getUser();
@@ -303,14 +297,12 @@ async function loadNotifications() {
 
     if (error) return;
 
-  
     if (badge && data) {
         const unreadCount = data.filter(n => !n.is_read).length;
         badge.innerText = unreadCount;
-        badge.style.display = unreadCount > 0 ? 'flex' : 'none'; // 'flex' for centering
+        badge.style.display = unreadCount > 0 ? 'flex' : 'none'; 
     }
 
-    
     if (list) {
         if (!data || data.length === 0) {
             list.innerHTML = '<div class="notif-empty" style="text-align:center; padding:20px; color:#94a3b8;">No notifications</div>';
@@ -338,7 +330,6 @@ async function markAsRead(id) {
     
     if (!error) loadNotifications(); 
 }
-
 
 document.addEventListener('click', (e) => {
     const notifPanel = document.getElementById('notifPanel');

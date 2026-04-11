@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Schedule</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    <link rel="stylesheet" href="./Css/schedule.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><img src="Icon2.png" alt="Logo"> HRMS</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+        <div class="nav-group-label">Core</div>
+        <div class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a></div>
+        <div class="nav-item"><a href="attendance.html" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a></div>
+        <div class="nav-item active" id="nav-schedule">
+            <a href="schedule.html" class="nav-link"><i class="fa fa-clock-o"></i> Schedule</a>
+        </div>
+
+        <div class="nav-group-label">Requests</div>
+        <div class="nav-item"><a href="leave.html" class="nav-link"><i class="fa fa-plane"></i> Leave</a></div>
+        <div class="nav-item"><a href="my-request.html" class="nav-link"><i class="fa fa-file-text-o"></i> My Requests</a></div>
+
+        <div class="nav-group-label">Communication</div>
+        <div class="nav-item"><a href="announcement.html" class="nav-link"><i class="fa fa-bullhorn"></i> Announcements</a></div>
+        <div class="nav-item"><a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages</a></div>
+
+        <div class="auth-admin">
+            <div class="nav-group-label">Talent & Growth</div>
+            <div class="nav-item"><a href="employee-management.html" class="nav-link"><i class="fa fa-id-badge"></i> Employee Managemennt</a></div>
+            <div class="nav-item"><a href="directory.html" class="nav-link"><i class="fa fa-users"></i> Directory</a></div>
+            <div class="nav-item"><a href="departments.html" class="nav-link"><i class="fa fa-sitemap"></i> Departments</a></div>
+            <div class="nav-item">
+                <a href="recruitment.html" class="nav-link">
+                    <i class="fa fa-rocket"></i> Recruitment 
+                    <span id="badge-count" class="badge-notif" style="display: none;">0</span>
+                </a>
+            </div>
+            <div class="nav-item"><a href="training.html" class="nav-link"><i class="fa fa-graduation-cap"></i> Training</a></div>
+        </div>
+        <div class="auth-super">
+            <div class="nav-group-label">Finance & Admin</div>
+            <div class="nav-item"><a href="payroll.html" class="nav-link"><i class="fa fa-credit-card"></i> Payroll</a></div>
+            <div class="nav-item"><a href="reports.html" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a></div>
+            <div class="nav-item"><a href="settings.html" class="nav-link"><i class="fa fa-cog"></i> Settings</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <header class="topbar">
+        <h3 id="topbar-title" style="font-size: 18px; font-weight: 700;">Work Station</h3>
+        
+        <div class="topbar-right">
+            <div class="notif-wrapper">
+                <div class="notif-icon-container" onclick="toggleNotifPanel()">
+                    <i class="fa fa-bell-o"></i>
+                    <span id="notif-badge" class="badge-notif" style="display:none;">0</span>
+                </div>
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header"><span>Notifications</span></div>
+                    <div id="notif-list" class="notif-list">
+                        <div class="notif-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="role-switcher-wrapper" id="superAdminTools" style="display: none;">
+                <select id="roleSwitcher" onchange="previewRole(this.value)">
+                    <option value="SuperAdmin">CEO (SuperAdmin)</option>
+                    <option value="Admin">Manager (Admin)</option>
+                    <option value="User">Employee (User)</option>
+                </select>
+            </div>
+
+            <div class="profile-trigger" onclick="toggleDropdown()">
+                <div class="profile-info">
+                    <span class="profile-name" id="userName">Loading...</span>
+                    <span class="profile-role" id="userRole">...</span>
+                </div>
+                <div class="profile-thumb" id="userInitials">--</div>
+                
+                <div class="dropdown-menu" id="profileMenu">
+                    <a href="profile.html" class="dropdown-item"><i class="fa fa-user-circle-o"></i> My Profile</a>
+                    <a href="preferences.html" class="dropdown-item"><i class="fa fa-cog"></i> Preferences</a>
+                    <hr style="margin: 5px 0; border: 0; border-top: 1px solid #f1f5f9;">
+                    <div class="dropdown-item" style="color: #ef4444;" onclick="handleSignOut()">
+                        <i class="fa fa-sign-out"></i> Sign Out
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="content roster-dashboard">
+        <header class="roster-header">
+            <div class="header-content">
+                <h2 class="main-title">Schedule</h2>
+                <p class="main-subtitle">Manage and assign employee shifts</p>
+            </div>
+            
+            <div class="header-actions" id="headerActions">
+                <div class="filter-pill">
+                    <i class="fa fa-calendar"></i>
+                    <input type="month" id="filterMonth" class="month-input-clean">
+                </div>
+            </div>
+        </header>
+
+        <div class="stats-overview-grid">
+            <div class="stat-card">
+                <label>Scheduled Today</label>
+                <div class="stat-main">
+                    <span class="stat-number blue" id="stat-scheduled-today">0</span>
+                    <small>Employees on shift</small>
+                </div>
+            </div>
+            <div class="stat-card">
+                <label>Active Now</label> <div class="stat-main">
+                    <span class="stat-number green" id="stat-active-now">0</span> 
+                    <small id="active-shift-status">Checking status...</small> </div>
+                    
+                    <div id="shift-action-container" style="margin-top: 10px;"></div>
+            </div>
+            <div class="stat-card">
+                <label>Total Employees</label>
+                <div class="stat-main">
+                    <span class="stat-number orange" id="stat-total-employees">0</span>
+                    <small>Under management</small>
+                </div>
+            </div>
+            <div class="stat-card">
+                <label>Missed This Week</label>
+                <div class="stat-main">
+                    <span class="stat-number red" id="stat-missed-week">0</span>
+                    <small>Requires attention</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="schedule-tabs">
+            <button class="tab-btn active" onclick="switchTab('calendar')">Calendar</button>
+            <button class="tab-btn" onclick="switchTab('table')">Schedule Table</button>
+            <button class="tab-btn auth-admin" id="btn-tab-mgmt" onclick="switchTab('management')" style="display:none;">Shift Management</button>
+        </div>
+
+        <div class="dashboard-grid">
+            <section class="roster-main-section">
+                <div id="tab-calendar" class="tab-content">
+                    <div class="hrms-card calendar-card">
+                        <div class="calendar-header">
+                            <h3 id="currentMonthYear">April 2026</h3>
+                            <div class="calendar-controls">
+                                <button class="btn-nav" onclick="changeMonth(-1)"><i class="fa fa-chevron-left"></i> Prev</button>
+                                <button class="btn-nav" onclick="changeMonth(1)">Next <i class="fa fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="calendar-container">
+                            <div class="calendar-weekdays">
+                                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                            </div>
+                            <div id="calendar-body" class="calendar-days"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-table" class="tab-content" style="display:none;">
+                    <div class="hrms-card">
+                        <div class="table-header-tools">
+                             <input type="text" id="tableSearch" placeholder="Search employee..." onkeyup="filterTable()">
+                        </div>
+                        <div id="schedule-grid" class="roster-content">
+                            </div>
+                    </div>
+                </div>
+
+                <div id="tab-management" class="tab-content" style="display:none;">
+                    <div class="hrms-card management-card">
+                        <div class="card-header">Assign New Shift</div>
+                        <div class="assignment-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Select Employee</label>
+                                    <select id="assignEmployee" class="input-field"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Work Date</label>
+                                    <input type="date" id="assignDate" class="input-field">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Start Time</label>
+                                    <input type="time" id="assignStart" class="input-field" value="08:00">
+                                </div>
+                                <div class="form-group">
+                                    <label>End Time</label>
+                                    <input type="time" id="assignEnd" class="input-field" value="17:00">
+                                </div>
+                            </div>
+                            <button onclick="saveNewShift()" class="btn-primary" style="margin-top: 10px;">
+                                <i class="fa fa-plus"></i> Confirm Assignment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="roster-sidebar">
+                <div class="rest-days-banner">
+                    <div class="rest-icon"><i class="fa fa-bed"></i></div>
+                    <div class="rest-info">
+                        <label>WEEKEND REST DAYS</label>
+                        <div class="rest-count" id="weekend-rest-count">0</div>
+                    </div>
+                </div>
+
+                <div class="alert-pill-warning">
+                    <i class="fa fa-info-circle"></i>
+                    <div class="alert-content">
+                        <strong>Workstation Assignment</strong>
+                        <p>Review your assigned desk for next week.</p>
+                    </div>
+                </div>
+
+                <div class="hrms-card policy-card">
+                    <div class="card-header">Shift Policies</div>
+                    <div class="policy-inner">
+                        <div class="shift-type-tag">
+                            <strong>Standard Shift: Mon-Fri</strong>
+                            <span>5-min grace period</span>
+                        </div>
+                        <ul class="policy-list">
+                            <li><i class="fa fa-check-circle success"></i> Fixed 1-hour unpaid break</li>
+                            <li><i class="fa fa-check-circle success"></i> Weekend Rest Days</li>
+                            <li><i class="fa fa-info-circle info"></i> Holiday pay applied</li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+
+<script src="./Js/schedule.js"></script>  
+<script src="./Js/dashboard.js"></script>
+
+</body>
+</html>

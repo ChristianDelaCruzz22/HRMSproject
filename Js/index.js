@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
            
 
             const { data: appData, error: dbError } = await _supabase
-                .from('applications')
+                .from('employees')
                 .select('status')
                 .eq('user_id', user.id)
                 .maybeSingle();

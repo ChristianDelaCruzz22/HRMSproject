@@ -20,7 +20,7 @@ async function initDashboard() {
     }
 
     const { data: profile, error } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('first_name, last_name, role, status, avatar_url, user_id')
         .eq('user_id', session.user.id)
         .single();
@@ -64,8 +64,8 @@ async function initDashboard() {
 function setupRecruitmentBadgeRealtime() {
    
     _supabase
-        .channel('public:applications')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, () => {
+        .channel('public:employees')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => {
             updateRecruitmentBadge();
         })
         .subscribe();
@@ -78,7 +78,7 @@ async function updateRecruitmentBadge() {
     if (currentRole === 'User') return;
 
     const { count, error } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Pending');
 
@@ -104,12 +104,12 @@ async function getFinancialStats() {
     const totalPayroll = payrollData?.reduce((sum, item) => sum + item.amount, 0) || 0;
 
     const { count: currentCount } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Approved');
 
     const { count: lastMonthCount } = await _supabase
-        .from('applications')
+        .from('employees')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Approved')
         .lt('created_at', firstDayMonth);
@@ -156,7 +156,7 @@ async function renderStats(role, userId) {
     if (!container) return;
 
     if (role === 'SuperAdmin') {
-        const { count: emps } = await _supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Approved');
+        const { count: emps } = await _supabase.from('employees').select('*', { count: 'exact', head: true });
         const { count: depts } = await _supabase.from('departments').select('*', { count: 'exact', head: true });
         const { count: alerts } = await _supabase.from('leave_requests').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
         const financials = await getFinancialStats();
@@ -169,7 +169,7 @@ async function renderStats(role, userId) {
             <div class="stat-card-new"><div class="icon-box red"><i class="fa fa-warning"></i></div><div class="details"><span>Alerts</span><h2>${alerts || 0}</h2></div></div>
         `;
     } else if (role === 'Admin') {
-        const { count: emps } = await _supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Approved');
+        const { count: emps } = await _supabase.from('employees').select('*', { count: 'exact', head: true });
         const { count: alerts } = await _supabase.from('leave_requests').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
         
         container.innerHTML = `
@@ -193,7 +193,7 @@ async function fetchRecentActivity(role, userId) {
     const body = document.getElementById('activity-body');
     if (!body) return;
 
-    let query = _supabase.from('attendance').select('*, applications(first_name, last_name)').order('created_at', { ascending: false }).limit(5);
+    let query = _supabase.from('attendance').select('*, employees(first_name, last_name)').order('created_at', { ascending: false }).limit(5);
     if (role === 'User' && userId) query = query.eq('user_id', userId);
     
     const { data } = await query;
@@ -201,7 +201,7 @@ async function fetchRecentActivity(role, userId) {
         `<tr><td colspan="4" style="text-align:center; padding:20px;">No recent activity found.</td></tr>` :
         data.map(item => `
             <tr>
-                <td>${item.applications?.first_name || 'User'}</td>
+                <td>${item.employees?.first_name || 'User'}</td>
                 <td>Clock In</td>
                 <td><span class="badge ${item.status.toLowerCase()}">${item.status}</span></td>
                 <td>${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
