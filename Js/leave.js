@@ -1,7 +1,3 @@
-/**
- * leave.js - HRMS Complete Logic
- * Features: Avatar Fix, Card Sync, Notifications, & Role Preview
- */
 
 const supabaseUrl = 'https://gsjnjktqqyxankennpau.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzam5qa3RxcXl4YW5rZW5ucGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzczMjksImV4cCI6MjA4OTkxMzMyOX0.ZrW8S0n3PkJJb_blIUkzgtav6REqPz6RI5zOniwR64E';
@@ -12,7 +8,7 @@ let currentRole = 'User';
 let actualUserId = null;
 let isActualSuperAdmin = false;
 
-/** 1. INITIALIZATION **/
+
 async function initLeave() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) { window.location.href = "index.html"; return; }
@@ -32,7 +28,7 @@ async function initLeave() {
         updateUserHeader(profile);
         applyRolePermissions(currentRole);
         
-        // Initial Data Load
+        
         await loadLeaveBalances();
         await loadMyRequests();
         await loadNotifications();
@@ -49,7 +45,7 @@ async function initLeave() {
     }
 }
 
-/** 2. AVATAR & HEADER FIX **/
+
 function updateUserHeader(profile) {
     document.getElementById('userName').innerText = `${profile.first_name} ${profile.last_name || ""}`;
     document.getElementById('userRole').innerText = ROLE_NAMES[currentRole] || currentRole;
@@ -64,7 +60,7 @@ function updateUserHeader(profile) {
     }
 }
 
-/** 3. ROLE CHANGER FIX **/
+
 window.previewRole = async function(selectedRole) {
     currentRole = selectedRole;
     const roleDisplay = document.getElementById('userRole');
@@ -83,11 +79,11 @@ window.previewRole = async function(selectedRole) {
     }
 };
 
-/** 4. LEAVE BALANCES (CARDS) FIX **/
+
 async function loadLeaveBalances() {
     console.log("Fetching live request counts from Supabase...");
 
-    // 1. Fetch all requests for the current user
+  
     const { data: requests, error } = await _supabase
         .from('leave_requests')
         .select('leave_type, status')
@@ -98,14 +94,14 @@ async function loadLeaveBalances() {
         return;
     }
 
-    // 2. Initialize counters for each category
+    
     const counts = {
         vacation: { approved: 0, total: 0 },
         sick: { approved: 0, total: 0 },
         emergency: { approved: 0, total: 0 }
     };
 
-    // 3. Loop through the actual data in your database
+    
     if (requests) {
         requests.forEach(req => {
             const type = req.leave_type.toLowerCase();
@@ -116,45 +112,44 @@ async function loadLeaveBalances() {
             else if (type.includes('emergency')) key = 'emergency';
 
             if (key) {
-                counts[key].total += 1; // Count every request made
+                counts[key].total += 1; 
                 if (req.status === 'Approved') {
-                    counts[key].approved += 1; // Count only approved ones
+                    counts[key].approved += 1; 
                 }
             }
         });
     }
 
-    // 4. Update the UI Cards to show the COUNT of requests
-    // VL Card: Shows total requests of this type
+    
     updateCardDisplay('vl', counts.vacation);
     
-    // SL Card
+    
     updateCardDisplay('sl', counts.sick);
     
-    // EL Card
+    
     updateCardDisplay('el', counts.emergency);
 }
 
 function updateCardDisplay(prefix, data) {
-    const remEl = document.getElementById(`${prefix}-rem`); // Large number
-    const usedEl = document.getElementById(`${prefix}-used`); // Small text
+    const remEl = document.getElementById(`${prefix}-rem`); 
+    const usedEl = document.getElementById(`${prefix}-used`); 
 
     if (remEl) {
-        // This shows the TOTAL number of requests sent (e.g., "1" for your sick leave)
+        
         remEl.innerText = data.total; 
     }
     if (usedEl) {
-        // This shows how many of those requests were actually approved
+        
         usedEl.innerText = data.approved; 
     }
 }
 
-/** 5. ADMIN LOADING & FILTERING **/
+
 async function loadAdminRequests() {
     const filterType = document.getElementById('typeFilter')?.value || 'All';
     console.log("Filtering by:", filterType);
 
-    // 1. Try the optimized join query
+    
     let query = _supabase
         .from('leave_requests')
         .select(`*, employees!user_id (first_name, last_name)`)
@@ -166,17 +161,17 @@ async function loadAdminRequests() {
 
     const { data, error } = await query.order('created_at', { ascending: true });
 
-    // 2. Fallback logic (If the join fails, we still need to filter the manual merge)
+    
     if (error || !data || (data.length > 0 && !data[0].employees)) {
         console.warn("Join failed or error occurred, using manual merge fallback.");
         
-        // Fetch requests and filter them manually
+        
         let { data: requests } = await _supabase
             .from('leave_requests')
             .select('*')
             .eq('status', 'Pending');
 
-        // APPLY FILTER TO FALLBACK DATA
+        
         if (filterType !== 'All') {
             requests = (requests || []).filter(r => r.leave_type === filterType);
         }
@@ -192,7 +187,7 @@ async function loadAdminRequests() {
         
         renderAdminTable(merged);
     } else {
-        // Use the successful join data
+        
         renderAdminTable(data);
     }
 }
@@ -217,7 +212,7 @@ function renderAdminTable(data) {
         </tr>`).join('') : '<tr><td colspan="6" style="text-align:center; padding: 20px;">No pending reviews.</td></tr>';
 }
 
-/** 6. SUBMISSION & APPROVAL **/
+
 async function handleLeaveFormSubmit(e) {
     e.preventDefault();
     const type = document.getElementById('leaveType').value;
@@ -268,7 +263,7 @@ window.processLeave = async function(id, status, uid, type, days) {
     await loadMyRequests();
 };
 
-/** 7. HISTORY & NOTIFICATIONS FIX **/
+
 async function loadMyRequests() {
     const { data } = await _supabase.from('leave_requests').select('*').eq('user_id', actualUserId).order('created_at', { ascending: false });
     const tbody = document.getElementById('myLeaveTableBody');
@@ -309,7 +304,7 @@ window.markAsRead = async function(id) {
     await loadNotifications();
 };
 
-/** 8. UI HELPERS **/
+
 function applyRolePermissions(role) {
     const isAdmin = (role === 'Admin' || role === 'SuperAdmin');
     document.querySelectorAll('.auth-admin').forEach(el => el.style.display = isAdmin ? 'block' : 'none');
