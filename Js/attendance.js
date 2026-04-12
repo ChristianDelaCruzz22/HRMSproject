@@ -86,21 +86,36 @@ window.previewRole = async function(roleValue) {
 };
 
 
-async function loadAttendanceLogs(filterMonth = null) {
+
+async function loadAttendanceLogs(filterMonth = null, filterStatus = 'All') {
     const body = document.getElementById('attendance-tbody');
     const tableHeader = document.querySelector('.dashboard-table thead tr');
     if (!body) return;
 
     body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Fetching records...</td></tr>`;
 
-    
     let query = _supabase.from('attendance').select('*');
+    
+    
     if (currentRole === 'User') {
         query = query.eq('user_id', actualUserId);
     }
+    
+    
     if (filterMonth) {
         query = query.gte('date', `${filterMonth}-01`).lt('date', getNextMonthFirstDay(filterMonth));
     }
+
+    
+    if (filterStatus !== 'All') {
+        if (filterStatus === 'Present') {
+            
+            query = query.eq('status', 'On Time');
+        } else {
+            query = query.eq('status', filterStatus);
+        }
+    }
+
     const { data: logs, error } = await query.order('date', { ascending: false });
 
     if (error) {
@@ -114,12 +129,6 @@ async function loadAttendanceLogs(filterMonth = null) {
         staff.forEach(s => nameMap[s.user_id] = `${s.first_name} ${s.last_name || ""}`);
     }
 
-  
-    if (tableHeader) {
-        tableHeader.innerHTML = `<th>Employee</th><th>Date</th><th>Time In</th><th>Time Out</th><th>Status</th><th>Hours</th>`;
-    }
-
-   
     if (logs && logs.length > 0) {
         body.innerHTML = logs.map(log => {
             const statusClass = log.status ? log.status.toLowerCase().replace(' ', '-') : 'present';
@@ -139,7 +148,7 @@ async function loadAttendanceLogs(filterMonth = null) {
             `;
         }).join('');
     } else {
-        body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">No records found.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">No records found matching this status.</td></tr>`;
     }
 }
 
@@ -287,10 +296,24 @@ function startLiveClock() {
 
 function setupFilterListener() {
     const monthPicker = document.getElementById('filterMonth');
-    if (monthPicker) monthPicker.addEventListener('change', (e) => {
-        loadAttendanceLogs(e.target.value);
-        updateSummaryStats(e.target.value); 
-    });
+    const statusPicker = document.getElementById('filterStatus'); // New listener
+
+    if (monthPicker) {
+        monthPicker.addEventListener('change', () => {
+            const mVal = monthPicker.value;
+            const sVal = statusPicker ? statusPicker.value : 'All';
+            loadAttendanceLogs(mVal, sVal);
+            updateSummaryStats(mVal); 
+        });
+    }
+
+    if (statusPicker) {
+        statusPicker.addEventListener('change', () => {
+            const mVal = monthPicker ? monthPicker.value : null;
+            const sVal = statusPicker.value;
+            loadAttendanceLogs(mVal, sVal);
+        });
+    }
 }
 
 function getNextMonthFirstDay(filterMonth) {

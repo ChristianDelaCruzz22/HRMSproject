@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HRMS | Attendance Management</title>
+    <title>HRMS | My Requests</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="./Css/attendance.css">
+    <link rel="stylesheet" href="./Css/my-request.css">
     <link rel="icon" type="image/png" href="Icon2.png">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,7 +23,7 @@
             <div class="nav-item">
                 <a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a>
             </div>
-            <div class="nav-item active">
+            <div class="nav-item">
                 <a href="attendance.html" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a>
             </div>
             <div class="nav-item">
@@ -34,7 +34,7 @@
             <div class="nav-item">
                 <a href="leave.html" class="nav-link"><i class="fa fa-plane"></i> Leave</a>
             </div>
-            <div class="nav-item">
+            <div class="nav-item active">
                 <a href="my-request.html" class="nav-link"><i class="fa fa-file-text-o"></i> My Requests</a>
             </div>
 
@@ -49,7 +49,7 @@
             <div class="auth-admin">
                 <div class="nav-group-label">Talent & Growth</div>
                 <div class="nav-item">
-                    <div class="nav-item"><a href="employee-management.html" class="nav-link"><i class="fa fa-id-badge"></i> Employee Managemennt</a></div>
+                    <div class="nav-item"><a href="employee-management.html" class="nav-link"><i class="fa fa-id-badge"></i> Employee Management</a></div>
                     <a href="directory.html" class="nav-link"><i class="fa fa-users"></i> Directory</a>
                 </div>
                 <div class="nav-item"><a href="departments.html" class="nav-link"><i class="fa fa-sitemap"></i> Departments</a></div>
@@ -73,7 +73,7 @@
                     <a href="reports.html" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a>
                 </div>
                  <div class="nav-item">
-                    <a href="settings.html" class="nav-link"><i class="fa fa-pie-chart"></i> Settings</a>
+                    <a href="settings.html" class="nav-link"><i class="fa fa-cog"></i> Settings</a>
                 </div>
             </div>
         </div>
@@ -81,10 +81,9 @@
 
     <div class="main">
         <header class="topbar">
-            <h3 id="topbar-title">Attendance Management</h3>
+            <h3 id="topbar-title">My Requests</h3>
             
             <div class="topbar-right">
-
                 <div class="notif-wrapper">
                     <div class="notif-icon-container" onclick="toggleNotifPanel()">
                         <i class="fa fa-bell-o"></i>
@@ -98,7 +97,6 @@
                     </div>
                 </div>
 
-
                 <div class="role-switcher-wrapper" id="superAdminTools" style="display: none;">
                     <select id="roleSwitcher" onchange="previewRole(this.value)">
                         <option value="SuperAdmin">CEO (SuperAdmin)</option>
@@ -106,7 +104,6 @@
                         <option value="User">Employee (User)</option>
                     </select>
                 </div>
-
 
                 <div class="profile-trigger" onclick="toggleDropdown()">
                     <div class="profile-info">
@@ -128,61 +125,44 @@
         </header>
 
         <main class="content">
-            <div class="attendance-hero">
-                <div class="clock-section shadow-sm">
-                    <div class="live-clock-wrapper">
-                        <h1 id="live-time">00:00:00 AM</h1>
-                        <p id="live-date">Loading date...</p>
-                    </div>
-                    
-                    <div class="attendance-actions">
-                        <button id="btn-time-in" class="att-btn in" onclick="handleTimeIn()">
-                            <i class="fa fa-sign-in"></i> TIME IN
-                        </button>
-                        <button id="btn-time-out" class="att-btn out" onclick="handleTimeOut()" disabled>
-                            <i class="fa fa-sign-out"></i> TIME OUT
-                        </button>
-                    </div>
-                    <p id="att-status-msg" class="status-msg">Check your daily logs below</p>
+            <div class="request-summary-grid">
+                <div class="summary-card">
+                    <span class="sum-label">Total Requests</span>
+                    <h2 id="total-req">0</h2>
                 </div>
-
-                <div class="summary-section">
-                    <div class="sum-card">
-                        <span class="label">Total Present</span>
-                        <h2 id="sum-present">0</h2>
-                    </div>
-                    <div class="sum-card">
-                        <span class="label">Late Records</span>
-                        <h2 id="sum-late" style="color: #f59e0b;">0</h2>
-                    </div>
-                    <div class="sum-card">
-                        <span class="label">Work Hours (MTD)</span>
-                        <h2 id="sum-hours" style="color: #3b82f6;">0.0h</h2>
-                    </div>
+                <div class="summary-card status-pending-bg">
+                    <span class="sum-label">Pending</span>
+                    <h2 id="pending-req" style="color: #f59e0b;">0</h2>
+                </div>
+                <div class="summary-card status-approved-bg">
+                    <span class="sum-label">Approved</span>
+                    <h2 id="approved-req" style="color: #10b981;">0</h2>
+                </div>
+                <div class="summary-card status-rejected-bg">
+                    <span class="sum-label">Rejected</span>
+                    <h2 id="rejected-req" style="color: #ef4444;">0</h2>
                 </div>
             </div>
 
             <div class="content-card">
-                <div class="card-header">
-                    <h3><i class="fa fa-history"></i> Attendance Logs</h3>
-                    <div class="table-controls" style="display: flex; gap: 15px;">
-                        <div class="filter-wrapper">
-                            <label for="filterStatus" class="filter-label">Status:</label>
-                            <select id="filterStatus" class="table-input pill-input" style="padding: 5px 15px;">
-                                <option value="All">All Statuses</option>
-                                <option value="Present">Present / On Time</option>
-                                <option value="Late">Late</option>
-                                <option value="Absent">Absent</option>
-                            </select>
-                        </div>
+                <div class="card-header" style="justify-content: space-between; display: flex; align-items: center; margin-bottom: 20px;">
+                    <h3><i class="fa fa-list-ul"></i> Request History</h3>
+                    
+                    <div class="table-controls" style="display: flex; gap: 10px;">
+                        <select id="filterType" class="table-input pill-input">
+                            <option value="all">All Types</option>
+                            <option value="Leave">Leave Requests</option>
+                            <option value="Overtime">Overtime</option>
+                            <option value="Shift Change">Shift Change</option>
+                            <option value="Correction">Attendance Corrections</option>
+                        </select>
 
-                        <div class="filter-wrapper month-picker">
-                            <label for="filterMonth" class="filter-label">Month:</label>
-                            <div class="input-icon-group">
-                                <input type="month" id="filterMonth" class="table-input pill-input">
-                                <i class="fa fa-calendar-o input-icon"></i>
-                            </div>
-                        </div>
+                        <select id="filterStatus" class="table-input pill-input">
+                            <option value="all">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -191,18 +171,18 @@
                         <thead>
                             <tr>
                                 <th>Employee</th>
-                                <th>Date</th>
-                                <th>Time In</th>
-                                <th>Time Out</th>
+                                <th>Type</th>
+                                <th>Date Submitted</th>
+                                <th>Details</th>
                                 <th>Status</th>
-                                <th>Hours</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="attendance-tbody">
+                        <tbody id="requestTableBody">
                             <tr>
-                                <td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">
-                                        Data Loading...
-                                    </td>
+                                <td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">
+                                    <i class="fa fa-spinner fa-spin"></i> Fetching your requests...
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -211,8 +191,7 @@
         </main>
     </div>
 
-    <script src="./Js/attendance.js"></script>
-    <script src="./Js/dashboard.js"></script>
+    
+    <script src="./Js/my-request.js"></script>
 </body>
 </html>
-

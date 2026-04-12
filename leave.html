@@ -129,7 +129,6 @@
         </div>
 
         <div class="leave-main-grid">
-            
             <div class="leave-card">
                 <div class="card-header">
                     <h4>Apply for Leave</h4>
@@ -178,8 +177,7 @@
                                 <th>STATUS</th>
                             </tr>
                         </thead>
-                        <tbody id="myLeaveTableBody">
-                            </tbody>
+                        <tbody id="myLeaveTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -188,6 +186,15 @@
         <div id="admin-leave-panel" class="leave-card admin-panel" style="display:none; margin-top: 25px;">
             <div class="card-header">
                 <h4><i class="fa fa-shield"></i> Pending Review (Admin)</h4>
+                    <div class="table-filter">
+                        <label for="typeFilter" style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Filter Type:</label>
+                        <select id="typeFilter" onchange="loadAdminRequests()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.85rem; outline: none; cursor: pointer;">
+                            <option value="All">All Types</option>
+                            <option value="Vacation">Vacation Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Emergency">Emergency Leave</option>
+                        </select>
+                    </div>
             </div>
             <div class="table-container">
                 <table class="leave-table">
@@ -201,27 +208,6 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="adminLeaveTableBody">
-                        </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="admin-leave-panel" class="leave-card admin-panel" style="display:none; margin-top: 25px;">
-            <div class="card-header">
-                <h4><i class="fa fa-shield"></i> Pending Review (Admin)</h4>
-            </div>
-            <div class="table-container">
-                <table class="leave-table">
-                    <thead>
-                        <tr>
-                            <th>Employee</th>
-                            <th>Type</th>
-                            <th>Dates</th>
-                            <th>Reason</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
                     <tbody id="adminLeaveTableBody"></tbody>
                 </table>
             </div>
@@ -230,6 +216,5 @@
 </div>
 
 <script src="./Js/leave.js"></script>
-<script src="./Js/dashboard.js"></script>
 </body>
 </html>

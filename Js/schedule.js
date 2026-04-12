@@ -430,14 +430,45 @@ window.changeMonth = async function(step) {
 };
 
 function setupFilterListener() {
-    const filter = document.getElementById('filterMonth');
-    if (filter) {
-        filter.addEventListener('change', (e) => {
+    const monthFilter = document.getElementById('filterMonth');
+    const statusFilter = document.getElementById('scheduleStatusFilter'); 
+
+    if (monthFilter) {
+        monthFilter.addEventListener('change', (e) => {
             const [y, m] = e.target.value.split('-');
             calendarDate = new Date(y, m - 1, 1);
             loadSchedules(e.target.value);
         });
     }
+
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', () => {
+            applyAllFilters();
+        });
+    }
+}
+
+function applyAllFilters() {
+    const searchTerm = document.getElementById('tableSearch')?.value.toLowerCase() || "";
+    const statusType = document.getElementById('scheduleStatusFilter')?.value || "All";
+    const now = new Date();
+
+    const filtered = allSchedules.filter(s => {
+        const empName = (globalNameMap[s.user_id] || "").toLowerCase();
+        const matchesSearch = empName.includes(searchTerm);
+        
+        const shiftEnd = new Date(`${s.shift_date}T${s.end_time}`);
+        const isDone = now > shiftEnd || s.status === 'Completed';
+
+        let matchesStatus = true;
+        if (statusType === 'Active') matchesStatus = !isDone;
+        if (statusType === 'Completed') matchesStatus = isDone;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    renderTable(filtered);
 }
 
 function getNextMonthFirstDay(filterMonth) {

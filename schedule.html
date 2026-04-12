@@ -174,8 +174,17 @@
 
                 <div id="tab-table" class="tab-content" style="display:none;">
                     <div class="hrms-card">
-                        <div class="table-header-tools">
-                             <input type="text" id="tableSearch" placeholder="Search employee..." onkeyup="filterTable()">
+                        <div class="table-header-tools" style="display: flex; gap: 10px; align-items: center;">
+                            <select id="scheduleStatusFilter" class="input-field" style="max-width: 150px; margin: 0;" onchange="loadScheduleTable()">
+                                <option value="All">All Status</option>
+                                <option value="Active">Active (Ongoing)</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+
+                            <div style="position: relative; flex-grow: 1;">
+                                <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                                <input type="text" id="tableSearch" placeholder="Search employee..." onkeyup="filterTable()" style="padding-left: 35px; margin: 0;">
+                            </div>
                         </div>
                         <div id="schedule-grid" class="roster-content">
                             </div>
