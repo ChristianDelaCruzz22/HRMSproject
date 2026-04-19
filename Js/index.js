@@ -98,6 +98,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    async function handleSignOut() {
+    try {
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (session) {
+            
+            await _supabase
+                .from('employees')
+                .update({ status: 'offline' })
+                .eq('user_id', session.user.id);
+        }
+
+        
+        await _supabase.auth.signOut();
+
+        
+        window.location.href = "index.html";
+        
+    } catch (err) {
+        console.error("Sign out error:", err.message);
+        
+        await _supabase.auth.signOut();
+        window.location.href = "index.html";
+    }
+}
+
 
     async function handleUserStatus(user) {
         try {
@@ -119,20 +145,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            if (appData.status === 'Approved') {
-                showToast("Access Granted. Redirecting...", "success");
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
-            } else {
-                await _supabase.auth.signOut();
-                showToast(`Status: ${appData.status}. Access restricted.`, "info");
-                resetLoginUI();
-            }
+           const allowedStatuses = ['Approved', 'online', 'offline'];
 
-        } catch (err) {
-            console.error("Status Check Error:", err);
-            showToast("Account verification failed.", "error");
+        if (allowedStatuses.includes(appData.status)) {
+            
+            await _supabase
+                .from('employees')
+                .update({ 
+                    status: 'online', 
+                    last_seen: new Date().toISOString() 
+                })
+                .eq('user_id', user.id);
+
+            showToast("Access Granted. Redirecting...", "success");
+            setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
+        } else {
+            
+            await _supabase.auth.signOut();
+            showToast(`Status: ${appData.status}. Access restricted.`, "info");
             resetLoginUI();
         }
+
+    } catch (err) {
+        console.error("Status Check Error:", err);
+        showToast("Account verification failed.", "error");
+        resetLoginUI();
+    }
     }
 
 });

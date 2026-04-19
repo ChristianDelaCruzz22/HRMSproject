@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userId = session.user.id;
 
     
+        updateAnnouncementBadge();
+        setupAnnouncementRealtime();
+
         await loadUserSettings(userId);
         
     
@@ -22,6 +25,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'index.html';
     }
 });
+
+const updateMessageBadge = async () => {
+    try {
+        // 1. Get the current session
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (!session) return; 
+
+        const userId = session.user.id;
+
+        const { count, error } = await _supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', userId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('msg-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+};
+
+
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        updateMessageBadge();
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', updateMessageBadge);
 
 
 async function loadUserSettings(userId) {
@@ -54,6 +98,46 @@ async function loadUserSettings(userId) {
         applyTheme(data.theme_preference);
     }
 }
+
+async function updateAnnouncementBadge() {
+    try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        const { data, error } = await _supabase
+            .from('announcements')
+            .select('id')
+            .gt('created_at', twentyFourHoursAgo.toISOString())
+            .in('audience', ['Everyone', currentRole === 'User' ? 'Employee' : 'Admin Only', currentRole])
+            .limit(1);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('ann-badge-nav');
+        if (badge) {
+            if (data && data.length > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = "!";
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+}
+
+function setupAnnouncementRealtime() {
+    _supabase
+        .channel('announcement-prefs')
+        .on('postgres_changes', 
+            { event: 'INSERT', schema: 'public', table: 'announcements' }, 
+            () => updateAnnouncementBadge()
+        )
+        .subscribe();
+}
+
+
 
 
 async function saveUserSettings(userId) {

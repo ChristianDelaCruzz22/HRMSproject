@@ -25,7 +25,7 @@ async function initDashboard() {
         .eq('user_id', session.user.id)
         .single();
 
-    if (profile && profile.status === 'Approved') {
+    if (profile && profile.status === 'Approved' || profile.status === 'online' || profile.status === 'offline') {
         const fName = profile.first_name || "User";
         const lName = profile.last_name || "";
         document.getElementById('userName').innerText = `${fName} ${lName}`;

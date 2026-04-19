@@ -34,10 +34,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (profile) {
         populateProfileUI(profile);
         applyRolePermissions(profile.role); 
+
+        updateAnnouncementBadge(profile.role);
+        setupAnnouncementRealtime(profile.role);
+
         loadNotifications(); 
         updateApplicantBadge();
     }
 });
+
+function setupAnnouncementRealtime(role) {
+    _supabase.channel('announcement-profile-view')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, (payload) => {
+            const newAnn = payload.new;
+            const isTarget = newAnn.audience === 'Everyone' || 
+                             newAnn.audience === role || 
+                             (role !== 'User' && newAnn.audience === 'Admin Only') ||
+                             (role === 'User' && newAnn.audience === 'Employee');
+
+            if (isTarget) {
+                const badge = document.getElementById('ann-badge-nav');
+                if (badge) {
+                    badge.style.display = 'flex';
+                    badge.innerText = "!";
+                }
+            }
+        })
+        .subscribe();
+}
 
 function populateProfileUI(p) {
     const fName = p.first_name || "User";
@@ -96,6 +120,34 @@ function populateProfileUI(p) {
     }
 }
 
+async function updateAnnouncementBadge(role) {
+    try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        const { data, error } = await _supabase
+            .from('announcements')
+            .select('id')
+            .gt('created_at', twentyFourHoursAgo.toISOString())
+            .in('audience', ['Everyone', role === 'User' ? 'Employee' : 'Admin Only', role])
+            .limit(1);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('ann-badge-nav');
+        if (badge) {
+            if (data && data.length > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = "!";
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Announcement badge error:", err.message);
+    }
+}
+
 function applyRolePermissions(role) {
     const isAdmin = (role === 'Admin' || role === 'SuperAdmin');
     const isSuper = (role === 'SuperAdmin');
@@ -114,6 +166,7 @@ function previewRole(val) {
     updateElement('topRole', ROLE_NAMES[val] + " ");
     updateElement('p-sysrole', ROLE_NAMES[val]);
     applyRolePermissions(val);
+    updateAnnouncementBadge(val);
     
     const tools = document.getElementById('superAdminTools');
     if (tools) tools.style.display = 'flex';
@@ -221,6 +274,47 @@ function handleImageUpload(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+const updateMessageBadge = async () => {
+    try {
+        // 1. Get the current session
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (!session) return; 
+
+        const userId = session.user.id;
+
+        const { count, error } = await _supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', userId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('msg-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+};
+
+
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        updateMessageBadge();
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', updateMessageBadge);
 
 async function handleChangeEmail() {
     const newEmail = prompt("Enter your new email address:");

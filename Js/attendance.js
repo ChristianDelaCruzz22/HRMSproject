@@ -21,7 +21,7 @@ async function initAttendance() {
         .eq('user_id', actualUserId)
         .single();
 
-    if (profile && profile.status === 'Approved') {
+    if (profile && (profile.status === 'Approved' || profile.status === 'online' || profile.status === 'offline')) {
         currentRole = profile.role;
         isActualSuperAdmin = (profile.role === 'SuperAdmin');
         
@@ -34,6 +34,7 @@ async function initAttendance() {
         await checkTodayStatus(actualUserId);
         await loadAttendanceLogs(); 
         await updateSummaryStats(); 
+        await checkInitialAnnouncements();
         
        
         setupRealtimeSubscriptions();
@@ -153,6 +154,72 @@ async function loadAttendanceLogs(filterMonth = null, filterStatus = 'All') {
 }
 
 
+
+const updateMessageBadge = async () => {
+    try {
+        // 1. Get the current session
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (!session) return; 
+
+        const userId = session.user.id;
+
+        const { count, error } = await _supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', userId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('msg-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+};
+
+
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        updateMessageBadge();
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', updateMessageBadge);
+
+async function checkInitialAnnouncements() {
+    try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        
+        const { data, error } = await _supabase
+            .from('announcements')
+            .select('id')
+            .gt('created_at', twentyFourHoursAgo.toISOString())
+            .in('audience', ['Everyone', currentRole])
+            .limit(1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            showAnnBadge();
+        }
+    } catch (err) {
+        console.error("Error checking initial announcements:", err.message);
+    }
+}
+
+
 async function updateSummaryStats(filterMonth = null) {
     let query = _supabase.from('attendance').select('*');
     if (currentRole === 'User') query = query.eq('user_id', actualUserId);
@@ -226,6 +293,16 @@ function setupRealtimeSubscriptions() {
         updateRecruitmentBadge();
     })
     .subscribe();
+
+    _supabase.channel('announcement-realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, (payload) => {
+        const newAnn = payload.new;
+        // Show badge if it's for everyone or matches the user's role
+        if (newAnn.audience === 'Everyone' || newAnn.audience === currentRole) {
+            showAnnBadge();
+        }
+    })
+    .subscribe();
 }
 
 async function updateRecruitmentBadge() {
@@ -283,6 +360,22 @@ async function checkTodayStatus(userId) {
         if (msg) msg.innerText = "Workday completed.";
     }
 }
+
+
+function showAnnBadge() {
+    const badge = document.getElementById('ann-badge-nav');
+    if (badge) {
+        badge.style.display = 'flex';
+    }
+}
+
+
+window.clearAnnBadge = () => {
+    const badge = document.getElementById('ann-badge-nav');
+    if (badge) {
+        badge.style.display = 'none';
+    }
+};
 
 function startLiveClock() {
     setInterval(() => {

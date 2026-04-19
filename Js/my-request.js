@@ -7,6 +7,7 @@ const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 const ROLE_NAMES = { 'SuperAdmin': 'CEO', 'Admin': 'Manager', 'User': 'Employee' };
 let allRequests = [];
 let currentUser = null;
+let currentRole = 'User';
 
 
 async function init() {
@@ -23,11 +24,58 @@ async function init() {
 
     await fetchUserProfile();
     await fetchMyRequests();
+
+    await updateRecruitmentBadge();
+    setupRecruitmentSubscription();
+
+    await updateAnnouncementBadge();
+    setupAnnouncementRealtime();
     
     setupUIControls();
     setupEventListeners();
     subscribeToChanges();
 }
+
+const updateMessageBadge = async () => {
+    try {
+        // 1. Get the current session
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (!session) return; 
+
+        const userId = session.user.id;
+
+        const { count, error } = await _supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', userId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('msg-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+};
+
+
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        updateMessageBadge();
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', updateMessageBadge);
 
 
 async function fetchUserProfile() {
@@ -69,6 +117,75 @@ async function fetchUserProfile() {
     }
 }
 
+async function updateAnnouncementBadge() {
+    try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        const { data, error } = await _supabase
+            .from('announcements')
+            .select('id')
+            .gt('created_at', twentyFourHoursAgo.toISOString())
+            .in('audience', ['Everyone', currentRole === 'User' ? 'Employee' : 'Admin Only', currentRole])
+            .limit(1);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('ann-badge-nav');
+        if (badge) {
+            if (data && data.length > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = "!";
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Announcement badge error:", err.message);
+    }
+}
+
+function setupAnnouncementRealtime() {
+    _supabase.channel('announcement-my-requests')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, () => {
+            updateAnnouncementBadge();
+        })
+        .subscribe();
+}
+
+async function updateRecruitmentBadge() {
+    try {
+        const { count, error } = await _supabase
+            .from('employees') 
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'Pending'); 
+
+        if (error) return;
+
+        const badgeElement = document.getElementById('badge-count');
+        if (badgeElement) {
+            if (count > 0) {
+                badgeElement.innerText = count;
+                badgeElement.style.display = 'flex';
+            } else {
+                badgeElement.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err);
+    }
+}
+
+function setupRecruitmentSubscription() {
+    _supabase.channel('recruitment-badge-my-req').on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'employees' 
+    }, () => {
+        updateRecruitmentBadge();
+    }).subscribe();
+}
+
 async function fetchMyRequests() {
     try {
         const { data, error } = await _supabase
@@ -87,7 +204,7 @@ async function fetchMyRequests() {
 
 
 function renderDashboard() {
-    // Summary Cards
+    
     if(document.getElementById('total-req')) document.getElementById('total-req').innerText = allRequests.length;
     if(document.getElementById('pending-req')) document.getElementById('pending-req').innerText = allRequests.filter(r => r.status === 'Pending').length;
     if(document.getElementById('approved-req')) document.getElementById('approved-req').innerText = allRequests.filter(r => r.status === 'Approved').length;
@@ -156,6 +273,7 @@ function setupUIControls() {
     window.previewRole = (role) => {
         const display = ROLE_NAMES[role] || role;
         document.getElementById('userRole').innerText = display;
+        updateAnnouncementBadge();
         
         if (role === 'User') {
             document.querySelectorAll('.auth-super, .auth-admin').forEach(el => el.style.display = 'none');

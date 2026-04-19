@@ -23,7 +23,7 @@ async function initSchedule() {
         .eq('user_id', actualUserId)
         .single();
 
-    if (profile && profile.status === 'Approved') {
+    if (profile && (profile.status === 'Approved' || profile.status === 'online' || profile.status === 'offline')) {
         currentRole = profile.role;
         isActualSuperAdmin = (profile.role === 'SuperAdmin');
         
@@ -31,10 +31,14 @@ async function initSchedule() {
         applyRolePermissions(currentRole);
         setupFilterListener();
         setupSearchListener(); 
+
+        await updateAnnouncementBadge(); 
+        updateRecruitmentBadge();
         
         await loadSchedules(); 
         await loadNotifications();
         setupRealtimeSubscriptions();
+        
 
         if (currentRole === 'Admin' || currentRole === 'SuperAdmin') {
             await loadEmployeeDropdown();
@@ -45,6 +49,46 @@ async function initSchedule() {
     }
 }
 
+const updateMessageBadge = async () => {
+    try {
+        // 1. Get the current session
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (!session) return; 
+
+        const userId = session.user.id;
+
+        const { count, error } = await _supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', userId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('msg-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+};
+
+
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        updateMessageBadge();
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', updateMessageBadge);
 
 window.previewRole = function(selectedRole) {
     currentRole = selectedRole; 
@@ -145,6 +189,36 @@ function renderCalendar(schedules) {
 
         dayDiv.appendChild(shiftContainer);
         calendarBody.appendChild(dayDiv);
+    }
+}
+
+async function updateAnnouncementBadge() {
+    try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        
+        const { data, error } = await _supabase
+            .from('announcements')
+            .select('id')
+            .gt('created_at', twentyFourHoursAgo.toISOString()) 
+            .in('audience', ['Everyone', currentRole]) 
+            .limit(1);
+
+        if (error) throw error;
+
+        
+        const badge = document.getElementById('ann-badge-nav');
+        if (badge) {
+            if (data && data.length > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = "!"; 
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
     }
 }
 
@@ -449,6 +523,23 @@ function setupFilterListener() {
     }
 }
 
+
+
+function showAnnBadge() {
+    const badge = document.getElementById('ann-badge-nav');
+    if (badge) {
+        badge.style.display = 'flex';
+    }
+}
+
+
+window.clearAnnBadge = () => {
+    const badge = document.getElementById('ann-badge-nav');
+    if (badge) {
+        badge.style.display = 'none';
+    }
+};
+
 function applyAllFilters() {
     const searchTerm = document.getElementById('tableSearch')?.value.toLowerCase() || "";
     const statusType = document.getElementById('scheduleStatusFilter')?.value || "All";
@@ -489,6 +580,17 @@ function setupRealtimeSubscriptions() {
             loadNotifications();
         })
         .subscribe();
+
+        _supabase
+    .channel('announcement-updates')
+    .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'announcements' }, 
+        () => {
+            console.log("New announcement detected! Updating badge...");
+            updateAnnouncementBadge();
+        }
+    )
+    .subscribe();   
 }
 
 window.handleSignOut = async () => { await _supabase.auth.signOut(); window.location.href = "index.html"; };

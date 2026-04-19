@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .single();
 
 
-    if (profile && profile.status === 'Approved' && (profile.role === 'Admin' || profile.role === 'SuperAdmin')) {
+    if (profile && (profile.status === 'Approved' || profile.status === 'online' || profile.status === 'offline') && (profile.role === 'Admin' || profile.role === 'SuperAdmin')) {
         actualUserRole = profile.role;
         currentRole = actualUserRole;
         
@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (adminTools) adminTools.style.display = 'flex';
         }
 
+        updateAnnouncementBadge(); 
+        setupAnnouncementRealtime();
         
         loadApplicants('Pending');
         updateBadge();
@@ -70,6 +72,47 @@ function updateHeaderUI(p) {
         }
     }
 }
+
+const updateMessageBadge = async () => {
+    try {
+        // 1. Get the current session
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (!session) return; 
+
+        const userId = session.user.id;
+
+        const { count, error } = await _supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', userId)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('msg-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+};
+
+
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        updateMessageBadge();
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', updateMessageBadge);
 
 function applySidebarRoles(role) {
     const isAdmin = (role === 'Admin' || role === 'SuperAdmin');
@@ -139,6 +182,22 @@ async function loadApplicants(status) {
     }).join('');
 }
 
+function setupAnnouncementRealtime() {
+    _supabase.channel('announcement-recruitment-view')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, (payload) => {
+            const newAnn = payload.new;
+            
+            if (newAnn.audience === 'Everyone' || newAnn.audience === 'Admin Only' || newAnn.audience === currentRole) {
+                const badge = document.getElementById('ann-badge-nav');
+                if (badge) {
+                    badge.style.display = 'flex';
+                    badge.innerText = "!";
+                }
+            }
+        })
+        .subscribe();
+}
+
 async function handleAction(uid, newStatus) {
     const confirmMsg = newStatus === 'Pending' 
         ? "Move this applicant back to Pending?" 
@@ -195,6 +254,34 @@ async function updateBadge() {
     }
 }
 
+async function updateAnnouncementBadge() {
+    try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        const { data, error } = await _supabase
+            .from('announcements')
+            .select('id')
+            .gt('created_at', twentyFourHoursAgo.toISOString())
+            .in('audience', ['Everyone', 'Admin Only', currentRole]) 
+            .limit(1);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('ann-badge-nav');
+        if (badge) {
+            if (data && data.length > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = "!";
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Announcement badge error:", err.message);
+    }
+}
+
 
 async function loadNotifications() {
     const { data: { user } } = await _supabase.auth.getUser();
@@ -204,7 +291,7 @@ async function loadNotifications() {
     if (badge) {
         const count = data ? data.length : 0;
         badge.innerText = count;
-        badge.style.display = count > 0 ? 'flex' : 'none'; // Keeps our centering fix
+        badge.style.display = count > 0 ? 'flex' : 'none'; 
     }
 }
 

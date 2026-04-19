@@ -155,6 +155,7 @@ body {
     border-radius: 8px; 
     transition: 0.2s; 
     cursor: pointer; 
+    position: relative;
 }
 
 .nav-link:hover { 
@@ -1627,4 +1628,37 @@ input:checked + .slider:before {
     .pref-input-field {
         width: 100%;
     }
+}
+
+.badge-notif-dot {
+    position: absolute;
+    right: 10px;        
+    background-color: #ef4444; 
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: none;      
+    align-items: center;
+    justify-content: center; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.badge-count {
+    background-color: #ef4444; 
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 10px; 
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    margin-left: auto; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

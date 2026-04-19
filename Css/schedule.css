@@ -1437,7 +1437,7 @@ td { padding: 16px 25px; font-size: 14px; border-bottom: 1px solid #f1f5f9; vert
 }
 
 .btn-confirm {
-    background: #ef4444; /* Primary Red */
+    background: #ef4444; 
     color: white;
     padding: 14px;
     border: none;
@@ -1461,4 +1461,20 @@ td { padding: 16px 25px; font-size: 14px; border-bottom: 1px solid #f1f5f9; vert
 
 .btn-confirm i {
     font-size: 18px;
+}
+
+.badge-count {
+    background-color: #ef4444; 
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 10px; 
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    margin-left: auto; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

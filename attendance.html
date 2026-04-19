@@ -40,10 +40,16 @@
 
             <div class="nav-group-label">Communication</div>
             <div class="nav-item">
-                <a href="announcement.html" class="nav-link"><i class="fa fa-bullhorn"></i> Announcements</a>
+                <a href="announcement.html" class="nav-link" onclick="clearAnnBadge()">
+                    <i class="fa fa-bullhorn"></i> Announcements
+                    <span id="ann-badge-nav" style="display: none; background: #ef4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; justify-content: center; align-items: center; margin-left: auto; font-weight: bold;">!</span>
+                </a>
+                
             </div>
             <div class="nav-item">
-                <a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages</a>
+                <a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages
+                    <span id="msg-badge" class="badge-count" style="display: none;"></span>
+                </a>
             </div>
 
             <div class="auth-admin">
