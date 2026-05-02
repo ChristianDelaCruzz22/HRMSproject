@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Employee Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./Css/employee-management.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><img src="Icon2.png" alt="Logo"> HRMS</h2>
+        </div>
+        
+        <div class="sidebar-nav">
+            <div class="nav-group-label">Core</div>
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a>
+            </div>
+            <div class="nav-item" hidden>
+                <a href="attendance.html" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a>
+            </div>
+            <div class="nav-item" hidden>
+                <a href="schedule.html" class="nav-link"><i class="fa fa-clock-o"></i> Schedule</a>
+            </div>
+
+            <div class="nav-group-label" hidden>Requests</div>
+            <div class="nav-item" hidden>
+                <a href="leave.html" class="nav-link"><i class="fa fa-plane"></i> Leave</a>
+            </div>
+            <div class="nav-item" hidden>
+                <a href="my-request.html" class="nav-link"><i class="fa fa-file-text-o"></i> My Requests</a>
+            </div>
+
+            <div class="nav-group-label" hidden>Communication</div>
+            <div class="nav-item" hidden>
+                <a href="announcement.html" class="nav-link">
+                    <i class="fa fa-bullhorn"></i> Announcements 
+                    <span id="ann-badge-nav" style="display: none; background: #ef4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; justify-content: center; align-items: center; margin-left: auto;">!</span>
+                </a>
+            </div>
+            <div class="nav-item" hidden>
+                <a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages
+                <span id="msg-badge-nav" style="display: none; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; justify-content: center; align-items: center; margin-left: auto; font-weight: 700;">0</span>
+                </a>
+            </div>
+
+            <div class="auth-admin" style="display: none;">
+                <div class="nav-group-label">Talent & Growth</div>
+                <div class="nav-item active"><a href="employee-management.html" class="nav-link"><i class="fa fa-id-badge"></i> Employee Management</a></div>
+                <div class="nav-item"><a href="directory.html" class="nav-link"><i class="fa fa-users"></i> Directory</a></div>
+                <div class="nav-item"><a href="departments.html" class="nav-link"><i class="fa fa-sitemap"></i> Departments</a></div>
+                <div class="nav-item">
+                    <a href="recruitment.html" class="nav-link">
+                        <i class="fa fa-rocket"></i> Recruitment 
+                        <span id="badge-count" class="badge-notif" style="display: none;">0</span>
+                    </a>
+                </div>
+                <div class="nav-item" hidden>
+                    <a href="training.html" class="nav-link">
+                        <i class="fa fa-graduation-cap"></i> Training   
+                    </a>
+                </div>
+            </div>
+
+            <div class="auth-super" style="display: none;">
+                <div class="nav-group-label" hidden>Finance & Admin</div>
+                <div class="nav-item" hidden><a href="payroll.html" class="nav-link"><i class="fa fa-credit-card"></i> Payroll</a></div>
+                <div class="nav-item" hidden><a href="reports.html" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a></div>
+                <div class="nav-item" hidden><a href="settings.html" class="nav-link"><i class="fa fa-cog"></i> Settings</a></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <header class="topbar">
+            <h3>Employee Management</h3>
+            
+            <div class="topbar-right">
+                <div class="notif-wrapper">
+                    <div class="notif-icon-container" onclick="toggleNotifPanel()">
+                        <i class="fa fa-bell-o"></i>
+                        <span id="notif-badge" class="badge-notif" style="display:none;">0</span>
+                    </div>
+                    <div class="notif-panel" id="notifPanel">
+                        <div class="notif-header"><span>Notifications</span></div>
+                        <div id="notif-list" class="notif-list">
+                            <div class="notif-empty">No new notifications</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="role-switcher-wrapper" id="superAdminTools" style="display: none;">
+                    <select id="roleSwitcher" onchange="previewRole(this.value)">
+                        <option value="SuperAdmin">CEO (SuperAdmin)</option>
+                        <option value="Admin">Manager (Admin)</option>
+                        <option value="User">Employee (User)</option>
+                    </select>
+                </div>
+
+                <div class="profile-trigger" onclick="toggleDropdown()">
+                    <div class="profile-info">
+                        <span class="profile-name" id="userName">Loading...</span>
+                        <span class="profile-role" id="userRole">...</span>
+                    </div>
+                    <div class="profile-thumb" id="userInitials">--</div>
+                    
+                    <div class="dropdown-menu" id="profileMenu">
+                        <a href="profile.html" class="dropdown-item"><i class="fa fa-user-circle-o"></i> My Profile</a>
+                        <a href="preferences.html" class="dropdown-item"><i class="fa fa-cog"></i> Preferences</a>
+                        <hr style="margin: 5px 0; border: 0; border-top: 1px solid #f1f5f9;">
+                        <div class="dropdown-item" style="color: #ef4444;" onclick="handleSignOut()">
+                            <i class="fa fa-sign-out"></i> Sign Out
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon icon-total"><i class="fa fa-users"></i></div>
+                    <div><span class="label">Total Employees</span><h2 id="count-total">0</h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-active"><i class="fa fa-check-circle"></i></div>
+                    <div><span class="label">Approved</span><h2 id="count-approved">0</h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-pending"><i class="fa fa-clock-o"></i></div>
+                    <div><span class="label">Pending</span><h2 id="count-pending">0</h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-inactive"><i class="fa fa-ban"></i></div>
+                    <div><span class="label">Deactivated</span><h2 id="count-inactive">0</h2></div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-toolbar">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterEmployees('All')">All</button>
+                        <button class="filter-tab" onclick="filterEmployees('Active')">Active</button>
+                        <button class="filter-tab" onclick="filterEmployees('Pending')">Pending</button>
+                        <button class="filter-tab" onclick="filterEmployees('Deactivated')">Deactivated</button>
+                    </div>
+                    
+                    <div class="toolbar-actions">
+                        <div class="search-pill">
+                            <i class="fa fa-search"></i>
+                            <input type="text" id="empSearch" placeholder="Search by name or email..." onkeyup="searchEmployees()">
+                        </div>
+                        <button class="btn-add" onclick="openAddModal()">
+                            <i class="fa fa-plus"></i> Add Employee
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employee-tbody">
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding:50px; color:#94a3b8;">
+                                    <i class="fa fa-spinner fa-spin"></i> Loading employee records...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <div id="editModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div class="modal-content" style="background:white; padding:24px; border-radius:16px; width:420px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        
+        <div style="display:flex; align-items:center; gap:16px; padding-bottom:20px; margin-bottom:20px; border-bottom:1px solid #f1f5f9;">
+            <div id="editModalAvatar" style="width:56px; height:56px; border-radius:50%; background:#f1f5f9; font-weight:700; color:#64748b; font-size:18px;"></div>
+            <div>
+                <h3 style="margin:0; font-size:18px; color:#1e293b;">Edit Employee</h3>
+                <p id="editModalEmail" style="margin:2px 0 0; font-size:13px; color:#64748b;"></p>
+            </div>
+        </div>
+
+        <form id="editEmployeeForm">
+            <input type="hidden" id="editUserId">
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">First Name</label>
+                    <input type="text" id="editFirstName" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;" required>
+                </div>
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">Last Name</label>
+                    <input type="text" id="editLastName" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;" required>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">Access Role</label>
+                <select id="editRole" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+                    <option value="User">Employee</option>
+                    <option value="Admin">Manager</option>
+                    <option value="SuperAdmin">CEO</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;">Department</label>
+                <select id="editDepartment" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: #fcfcfc;">
+                    <option value="Accounting">Accounting</option>
+                            <option value="Administration">Administration</option>
+                            <option value="Customer Service">Customer Service</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Human Resources">Human Resources</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Legal">Legal</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Procurement">Procurement</option>
+                            <option value="Product Development">Product Development</option>
+                            <option value="Quality Assurance">Quality Assurance</option>
+                            <option value="Research and Development">Research and Development</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Training and Development">Training and Development</option>
+                            <option value="Logistics">Logistics</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Public Relations">Public Relations</option>
+                            <option value="Facilities">Facilities</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="button" onclick="closeEditModal()" style="flex:1; padding:12px; border-radius:10px; border:1px solid #e2e8f0; background:white; font-weight:600; cursor:pointer;">Cancel</button>
+                <button type="submit" style="flex:1; padding:12px; border-radius:10px; border:none; background:#3b82f6; color:white; font-weight:600; cursor:pointer;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="addModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div class="modal-content" style="background:white; padding:32px; border-radius:16px; width:90%; max-width:900px; max-height:90vh; overflow-y:auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        
+        <form id="addEmployeeForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+                
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+                        <i class="fa fa-user-circle-o" style="color:#64748b;"></i>
+                        <h4 style="margin:0; font-size:14px; text-transform:uppercase; color:#1e293b; letter-spacing:0.5px; font-weight:700;">Personal & Account</h4>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="addFirstName" class="form-input" placeholder="e.g. Juan" required>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="addLastName" class="form-input" placeholder="e.g. Dela Cruz" required>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" id="addDOB" class="form-input" required>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label class="form-label">Gender</label>
+                        <div style="display:flex; gap:20px; margin-top:10px;">
+                            <label style="font-size:13px; color:#64748b; font-weight:500;"><input type="radio" name="gender" value="Male" checked> Male</label>
+                            <label style="font-size:13px; color:#64748b; font-weight:500;"><input type="radio" name="gender" value="Female"> Female</label>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="addEmail" class="form-input" placeholder="work@gmail.com" required>
+                    </div>
+
+                    <div style="position:relative;">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="addPassword" class="form-input" placeholder="••••••••" required>
+                        <i class="fa fa-eye" 
+                        id="togglePassword" 
+                        style="position:absolute; right:12px; top:35px; color:#94a3b8; cursor:pointer;"
+                        onclick="togglePasswordVisibility('addPassword', 'togglePassword')"></i>
+                    </div>
+
+                    <div style="position:relative; margin-top: 15px;">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="confirmPassword" class="form-input" placeholder="••••••••" required>
+                        <i class="fa fa-eye" 
+                        id="toggleConfirmPassword" 
+                        style="position:absolute; right:12px; top:35px; color:#94a3b8; cursor:pointer;"
+                        onclick="togglePasswordVisibility('confirmPassword', 'toggleConfirmPassword')"></i>
+                    </div>
+                </div>
+
+                <div style="border-left: 1px solid #f1f5f9; padding-left: 32px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+                        <i class="fa fa-file-text-o" style="color:#64748b;"></i>
+                        <h4 style="margin:0; font-size:14px; text-transform:uppercase; color:#1e293b; letter-spacing:0.5px; font-weight:700;">Application Details</h4>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label class="form-label">Position Applied</label>
+                        <input type="text" id="addPosition" class="form-input" placeholder="e.g. Web Developer" required>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label class="form-label">Preferred Department</label>
+                        <select id="addDept" class="form-input">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:32px; padding-top:20px; border-top:1px solid #f1f5f9;">
+                <button type="button" onclick="closeAddModal()" style="padding:10px 30px; border-radius:8px; border:1px solid #e2e8f0; background:white; color:#64748b; font-weight:600; cursor:pointer;">Cancel</button>
+                <button type="submit" style="padding:10px 30px; border-radius:8px; border:none; background:#3b82f6; color:white; font-weight:600; cursor:pointer;">Submit Application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <script src="./Js/employee-management.js"></script>
+    
+
+</body>
+</html>

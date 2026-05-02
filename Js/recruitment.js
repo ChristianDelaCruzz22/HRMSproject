@@ -9,41 +9,36 @@ let actualUserRole = 'User';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await _supabase.auth.getSession();
-    if (!session) { 
-        window.location.href = "index.html"; 
-        return; 
-    }
+    if (!session) { window.location.href = "index.html"; return; }
 
-  
+    
     const { data: profile } = await _supabase
-        .from('employees')
-        .select('*')
+        .from('employee')
+        .select('*, job(position)')
         .eq('user_id', session.user.id)
         .single();
 
-
-    if (profile && (profile.status === 'Approved' || profile.status === 'online' || profile.status === 'offline') && (profile.role === 'Admin' || profile.role === 'SuperAdmin')) {
+    if (profile && (profile.role === 'Admin' || profile.role === 'SuperAdmin')) {
         actualUserRole = profile.role;
         currentRole = actualUserRole;
         
         updateHeaderUI(profile);
         applySidebarRoles(profile.role);
         
-        
         if (actualUserRole === 'SuperAdmin') {
             const adminTools = document.getElementById('superAdminTools');
             if (adminTools) adminTools.style.display = 'flex';
         }
 
-        updateAnnouncementBadge(); 
-        setupAnnouncementRealtime();
         
         loadApplicants('Pending');
         updateBadge();
-        loadNotifications(); 
+        
+        
+        try { loadNotifications(); } catch(e) { console.log("Notif table missing"); }
+        try { updateMessageBadge(); } catch(e) { console.log("Message table missing"); }
         
     } else {
-        
         window.location.href = "dashboard.html";
     }
 });
@@ -73,43 +68,6 @@ function updateHeaderUI(p) {
     }
 }
 
-const updateMessageBadge = async () => {
-    try {
-        // 1. Get the current session
-        const { data: { session } } = await _supabase.auth.getSession();
-        
-        if (!session) return; 
-
-        const userId = session.user.id;
-
-        const { count, error } = await _supabase
-            .from('messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('receiver_id', userId)
-            .eq('is_read', false);
-
-        if (error) throw error;
-
-        const badge = document.getElementById('msg-badge');
-        if (badge) {
-            if (count > 0) {
-                badge.innerText = count > 99 ? '99+' : count;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-    } catch (err) {
-        console.error("Badge Error:", err.message);
-    }
-};
-
-
-_supabase.auth.onAuthStateChange((event, session) => {
-    if (session) {
-        updateMessageBadge();
-    }
-});
 
 
 document.addEventListener('DOMContentLoaded', updateMessageBadge);
@@ -131,121 +89,141 @@ async function loadApplicants(status) {
     const list = document.getElementById('applicants-list');
     if (!list) return;
     
-    list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:#64748b;">Loading...</td></tr>';
+    list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px;">Loading...</td></tr>';
 
-    const { data, error } = await _supabase
-        .from('employees')
-        .select('*')
-        .eq('status', status)
-        .order('created_at', { ascending: false });
+    try {
+        const { data, error } = await _supabase
+            .from('employee') 
+            .select('*, job(position)')
+            .ilike('status', status) 
+            .order('created_at', { ascending: false });
 
-    if (error || !data || data.length === 0) {
-        list.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">No ${status.toLowerCase()} applications found.</td></tr>`;
-        return;
-    }
+        console.log(`Checking ${status} applicants:`, data);
 
-    list.innerHTML = data.map(app => {
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            list.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">No ${status.toLowerCase()} applicants found.</td></tr>`;
+            return;
+        }
+
+        list.innerHTML = data.map(app => {
+    
+        console.log("Loading Applicant:", app.first_name, "Row ID:", app.id);
+
         const resumeClass = (status === 'Approved') ? 'resume-btn resume-btn-approved' : 'resume-btn';
+        const displayPosition = (app.job && app.job.length > 0) ? app.job[0].position : 'Employee';
         
+        
+        const targetId = app.id || app.user_id;
+
         let actionColumn = '';
         if (status === 'Pending') {
             actionColumn = `
-                <button onclick="handleAction('${app.user_id}', 'Rejected')" class="btn-action-reject">Reject</button>
-                <button onclick="handleAction('${app.user_id}', 'Approved')" class="btn-action-approve">Approve</button>
+                <button onclick="handleAction('${targetId}', 'Rejected')" class="btn-action-reject">Reject</button>
+                <button onclick="handleAction('${targetId}', 'Approved')" class="btn-action-approve">Approve</button>
+            `;
+        } else if (status === 'Approved') {
+            const modDate = app.modified_at ? new Date(app.modified_at).toLocaleDateString(undefined, {
+                month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : 'N/A';
+            const modBy = app.modified_by_name || 'System';
+            
+            actionColumn = `
+                <div class="approved-info-container">
+                    <span class="status-tag approved">Approved</span>
+                    <div class="audit-trail">
+                        <span class="audit-user"><i class="fa fa-user-check"></i> ${modBy}</span>
+                        <span class="audit-date">${modDate}</span>
+                    </div>
+                </div>
             `;
         } else if (status === 'Rejected') {
             actionColumn = `
-                <button onclick="handleAction('${app.user_id}', 'Pending')" class="btn-action-recheck">
+                <button onclick="handleAction('${targetId}', 'Pending')" class="btn-action-recheck">
                     <i class="fa fa-refresh"></i> Recheck
                 </button>
             `;
         } else {
-            const statusClass = status.toLowerCase();
-            actionColumn = `<span class="status-tag ${statusClass}">${status}</span>`;
+            actionColumn = `<span class="status-tag ${status.toLowerCase()}">${status}</span>`;
         }
 
         return `
             <tr>
                 <td>
-                    <div style="font-weight:700; color:#1e293b; font-size:15px;">${app.first_name} ${app.last_name}</div>
+                    <div style="font-weight:700; color:#1e293b;">${app.first_name} ${app.last_name}</div>
                     <div style="margin-top:8px;">
                         <a href="${app.resume_url}" target="_blank" class="${resumeClass}">
                             <i class="fa fa-file-pdf-o"></i> View Resume
                         </a>
                     </div>
                 </td>
-                <td><span class="pos-tag">${app.position || 'Employee'}</span></td>
-                <td style="color:#64748b; font-size:13px;">${new Date(app.created_at).toLocaleDateString()}</td>
+                <td><span class="pos-tag">${displayPosition}</span></td>
+                <td style="color:#64748b;">${new Date(app.created_at).toLocaleDateString()}</td>
                 <td style="text-align:right;">${actionColumn}</td>
             </tr>
         `;
     }).join('');
-}
-
-function setupAnnouncementRealtime() {
-    _supabase.channel('announcement-recruitment-view')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, (payload) => {
-            const newAnn = payload.new;
-            
-            if (newAnn.audience === 'Everyone' || newAnn.audience === 'Admin Only' || newAnn.audience === currentRole) {
-                const badge = document.getElementById('ann-badge-nav');
-                if (badge) {
-                    badge.style.display = 'flex';
-                    badge.innerText = "!";
-                }
-            }
-        })
-        .subscribe();
-}
-
-async function handleAction(uid, newStatus) {
-    const confirmMsg = newStatus === 'Pending' 
-        ? "Move this applicant back to Pending?" 
-        : `Are you sure you want to ${newStatus.toLowerCase()} this applicant?`;
-
-    if (!confirm(confirmMsg)) return;
-
-
-    const roleToAssign = newStatus === 'Approved' ? 'User' : null;
-
-    const { error } = await _supabase
-        .from('employees')
-        .update({ status: newStatus, role: roleToAssign })
-        .eq('user_id', uid);
-
-    if (error) {
-        console.error("Action Error:", error.message);
-        alert("Failed to update status.");
-        return;
+    } catch (err) {
+        console.error("Fetch Error:", err.message);
+        list.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Error: ${err.message}</td></tr>`;
     }
+}
 
-    
-    const { data: { user } } = await _supabase.auth.getUser();
-    let notifyMsg = "";
-    if (newStatus === 'Approved') notifyMsg = "Your application has been Approved! Welcome to the team.";
-    else if (newStatus === 'Rejected') notifyMsg = "Your application status has been updated to Rejected.";
-    else if (newStatus === 'Pending') notifyMsg = "Your application is being re-evaluated.";
 
-    await _supabase.from('notifications').insert([{
-        sender_id: user.id,
-        receiver_id: uid,
-        message: notifyMsg,
-        type: 'direct',
-        is_read: false
-    }]);
 
-   
-    const activeTab = document.querySelector('.filter-btn.active').innerText;
-    loadApplicants(activeTab);
-    updateBadge();
+async function handleAction(rowId, newStatus) {
+    if (!rowId || rowId === 'undefined') return;
+    if (!confirm(`Set status to ${newStatus}?`)) return;
+
+    try {
+        
+        const adminName = document.getElementById('userName')?.innerText || "Unknown Admin";
+
+        const updates = { 
+            status: newStatus,
+            modified_by_name: adminName, 
+            modified_at: new Date().toISOString() 
+        };
+        if (newStatus === 'Approved') updates.role = 'User';
+
+        const { data, error } = await _supabase
+            .from('employee')
+            .update(updates)
+            .eq('id', rowId) 
+            .select();
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            alert("Update failed: Record not found.");
+            return;
+        }
+
+        
+        if (window.showToast) {
+            showToast(`Status: ${newStatus}`, "success");
+        } else {
+            alert(`Successfully updated to ${newStatus}`);
+        }
+        
+        
+        const activeTab = document.querySelector('.filter-btn.active')?.innerText || 'Pending';
+        await loadApplicants(activeTab);
+        if (window.updateBadge) await updateBadge();
+
+    } catch (err) {
+        console.error("Action Error:", err.message);
+        alert("Error: " + err.message);
+    }
 }
 
 
 async function updateBadge() {
     const { count } = await _supabase
-        .from('employees')
+        .from('employee')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'Pending');
+        .ilike('status', 'Pending');
 
     const badge = document.getElementById('badge-count');
     if (badge) {
@@ -254,33 +232,7 @@ async function updateBadge() {
     }
 }
 
-async function updateAnnouncementBadge() {
-    try {
-        const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-        const { data, error } = await _supabase
-            .from('announcements')
-            .select('id')
-            .gt('created_at', twentyFourHoursAgo.toISOString())
-            .in('audience', ['Everyone', 'Admin Only', currentRole]) 
-            .limit(1);
-
-        if (error) throw error;
-
-        const badge = document.getElementById('ann-badge-nav');
-        if (badge) {
-            if (data && data.length > 0) {
-                badge.style.display = 'flex';
-                badge.innerText = "!";
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-    } catch (err) {
-        console.error("Announcement badge error:", err.message);
-    }
-}
 
 
 async function loadNotifications() {

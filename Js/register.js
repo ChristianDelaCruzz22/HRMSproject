@@ -122,8 +122,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             
-            submitBtn.innerText = "Finalizing Application...";
-            const { error: dbError } = await _supabase.from('employees').insert([{
+            
+        submitBtn.innerText = "Finalizing Application...";
+
+        
+        const { data: newEmployee, error: dbError } = await _supabase
+            .from('employee')
+            .insert([{
                 user_id: finalUser.id,
                 first_name: document.getElementById('firstName').value.trim(),
                 last_name: document.getElementById('lastName').value.trim(),
@@ -131,15 +136,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 birthday: birthday, 
                 gender: gender,     
                 contact: document.getElementById('contact').value,
-                position: document.getElementById('position').value,
-                department: document.getElementById('department').value,
                 resume_url: resumeUrl, 
                 introduction: document.getElementById('intro').value,
                 status: 'Pending',
                 role: 'User'
+            }])
+            .select() 
+            .single();
+
+        if (dbError) throw dbError;
+
+       
+        // 1. Get the department name and REMOVE extra spaces automatically
+        const selectedDeptName = document.getElementById('department').value.trim();
+
+        // 2. Search the Department table with extra protection
+        const { data: deptData, error: deptLookupError } = await _supabase
+            .from('department')
+            .select('id')
+            // Using ilike makes it case-insensitive (e.g., 'legal' matches 'Legal')
+            .ilike('department_name', selectedDeptName) 
+            .maybeSingle(); 
+
+        if (deptLookupError || !deptData) {
+            console.warn(`Warning: Could not find a UUID for "${selectedDeptName}".`);
+        }
+
+        // 3. Store the link in the job table
+        const { error: jobError } = await _supabase
+            .from('job')
+            .insert([{
+                employee_id: newEmployee.id,
+                department_id: deptData ? deptData.id : null, 
+                position: document.getElementById('position').value.trim(),
+                work_location: 'On-site' 
             }]);
 
-            if (dbError) throw dbError;
+        if (jobError) throw jobError;
 
             
             showToast("Application Submitted Successfully!", "success");

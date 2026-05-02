@@ -97,6 +97,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+    async function handleLogin(email, password) {
+    const { data, error } = await _supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        alert("Login failed: " + error.message);
+        return;
+    }
+
+    
+    const { data: profile, error: profileError } = await _supabase
+        .from('employee')
+        .select('role, status')
+        .eq('user_id', data.user.id)
+        .single();
+
+    if (profileError || !profile) {
+        console.error("Profile fetch error:", profileError);
+
+        window.location.href = "dashboard.html"; 
+        return;
+    }
+
+    
+    if (profile.role === 'Admin' || profile.role === 'SuperAdmin') {
+        window.location.href = "dashboard.html"; 
+    } else {
+        window.location.href = "dashboard.html";
+    }
+}
 
     async function handleSignOut() {
     try {
@@ -105,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (session) {
             
             await _supabase
-                .from('employees')
+                .from('employee')
                 .update({ status: 'offline' })
                 .eq('user_id', session.user.id);
         }
@@ -126,51 +158,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     async function handleUserStatus(user) {
-        try {
+    try {
+        console.log("Checking status for user:", user.id);
         
-           
+        const { data: appData, error: dbError } = await _supabase
+            .from('employee')
+            .select('status, role')
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-            const { data: appData, error: dbError } = await _supabase
-                .from('employees')
-                .select('status')
-                .eq('user_id', user.id)
-                .maybeSingle();
+        if (dbError) {
+            console.error("Database Error details:", dbError);
+            throw new Error(`DB Error: ${dbError.message}`);
+        }
 
-            if (dbError) throw dbError;
+        if (!appData) {
+            console.log("No profile found, redirecting to register.");
+            window.location.href = "register.html";
+            return;
+        }
 
-           
-            if (!appData) {
-                showToast("Authenticated. Completing profile...", "info");
-                setTimeout(() => { window.location.href = "register.html"; }, 1500);
-                return;
-            }
+        console.log("Profile found:", appData);
 
-           const allowedStatuses = ['Approved', 'online', 'offline'];
+        const isManagement = ['Admin', 'SuperAdmin'].includes(appData.role);
+        const isApproved = ['Approved', 'online', 'offline'].includes(appData.status);
 
-        if (allowedStatuses.includes(appData.status)) {
+        if (isManagement || isApproved) {
             
             await _supabase
-                .from('employees')
-                .update({ 
-                    status: 'online', 
-                    last_seen: new Date().toISOString() 
-                })
+                .from('employee')
+                .update({ status: 'online', last_seen: new Date().toISOString() })
                 .eq('user_id', user.id);
 
-            showToast("Access Granted. Redirecting...", "success");
-            setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
-        } else {
+            showToast("Access Granted", "success");
             
+            setTimeout(() => {
+                window.location.href =  "dashboard.html";
+            }, 1000);
+        } else {
             await _supabase.auth.signOut();
             showToast(`Status: ${appData.status}. Access restricted.`, "info");
             resetLoginUI();
         }
 
     } catch (err) {
-        console.error("Status Check Error:", err);
-        showToast("Account verification failed.", "error");
+        console.error("Full Verification Error:", err);
+        showToast(`Verification Failed: ${err.message}`, "error");
         resetLoginUI();
     }
-    }
-
+}
+    
 });

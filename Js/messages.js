@@ -45,6 +45,7 @@ async function init() {
     await updateRecruitmentBadge();
     await loadEmployees();
     
+    await updateAnnouncementBadge();
     setupPresence(currentUser.id);
 
     setupRealtimeSubscription();
@@ -494,6 +495,53 @@ window.leaveCall = async () => {
     if(container) container.style.display = 'none';
 };
 
+// Announcement Badge Logic
+async function updateAnnouncementBadge() {
+    try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        
+        const { data, error } = await _supabase
+            .from('announcements')
+            .select('id')
+            .gt('created_at', twentyFourHoursAgo.toISOString()) 
+            .in('audience', ['Everyone', currentRole]) 
+            .limit(1);
+
+        if (error) throw error;
+
+        
+        const badge = document.getElementById('ann-badge-nav');
+        if (badge) {
+            if (data && data.length > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = "!"; 
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (err) {
+        console.error("Badge Error:", err.message);
+    }
+}
+
+function showAnnBadge() {
+    const badge = document.getElementById('ann-badge-nav');
+    if (badge) {
+        badge.style.display = 'flex';
+    }
+}
+
+
+window.clearAnnBadge = () => {
+    const badge = document.getElementById('ann-badge-nav');
+    if (badge) {
+        badge.style.display = 'none';
+    }
+};
+
+// -------------------------------------
 
 function setupUIListeners() {
     const form = document.getElementById('messageForm');

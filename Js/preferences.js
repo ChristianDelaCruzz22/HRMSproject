@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', updateMessageBadge);
 
 async function loadUserSettings(userId) {
     const { data, error } = await _supabase
-        .from('employees')
+        .from('employee')
         .select('theme_preference, email_notifications, timezone, time_format')
         .eq('user_id', userId)
         .single();
@@ -150,7 +150,7 @@ async function saveUserSettings(userId) {
     };
 
     const { error } = await _supabase
-        .from('employees')
+        .from('employee')
         .update(settings)
         .eq('user_id', userId);
 

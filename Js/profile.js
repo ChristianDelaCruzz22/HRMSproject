@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateElement('p-password-display', '••••••••••••');
 
     const { data: profile, error } = await _supabase
-        .from('employees')
+        .from('employee')
         .select('*')
         .eq('user_id', session.user.id)
         .single();
@@ -87,7 +87,8 @@ function populateProfileUI(p) {
     updateElement('p-contact', p.contact || 'Not Provided'); 
     updateElement('p-address', p.address || 'Not Provided');
     updateElement('p-dob', p.birthday || 'Not Provided');
-    updateElement('p-dept', p.department || 'General');
+    updateElement('p-dept', p.department_name || 'General');
+    updateElement('disp-pos-dept', `${p.position || 'Staff'} | ${p.department_name || 'Operations'}`);
     updateElement('p-location', p.work_location || 'On-site');
     updateElement('p-hired', p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A');
     updateElement('p-sysrole', ROLE_NAMES[p.role]);
@@ -182,7 +183,11 @@ function previewRole(val) {
     }
 }
 
-function openEditModal() {
+async function openEditModal() {
+    // 1. Fetch the latest departments from DB
+    await fetchDepartments();
+
+    // 2. Map existing data to modal fields
     updateElement('modalInitials', document.getElementById('mainInitials').innerText);
     updateElement('view-empid', document.getElementById('p-empid').innerText);
     updateElement('view-hired', document.getElementById('p-hired').innerText);
@@ -195,12 +200,17 @@ function openEditModal() {
     document.getElementById('edit-gender').value = document.getElementById('p-gender').innerText.replace('Not Provided', '');
     document.getElementById('edit-contact').value = document.getElementById('p-contact').innerText.replace('Not Provided', '');
     document.getElementById('edit-address').value = document.getElementById('p-address').innerText.replace('Not Provided', '');
-    document.getElementById('edit-dept').value = document.getElementById('p-dept').innerText;
+    
+    // 3. Set the current department (Now that the list is populated)
+    const currentDept = document.getElementById('p-dept').innerText;
+    document.getElementById('edit-dept').value = currentDept;
+
     document.getElementById('edit-location').value = document.getElementById('p-location').innerText;
 
     const dobValue = document.getElementById('p-dob').innerText;
     if (dobValue !== 'Not Provided') document.getElementById('edit-dob').value = dobValue;
 
+    // Show modal
     const modal = document.getElementById('editModal');
     if (modal) modal.style.display = 'flex';
 }
@@ -235,14 +245,18 @@ document.getElementById('editProfileForm').onsubmit = async (e) => {
             contact: document.getElementById('edit-contact').value,
             address: document.getElementById('edit-address').value,
             birthday: document.getElementById('edit-dob').value,
-            department: document.getElementById('edit-dept').value,
+            
+            // CHANGE THIS LINE to match your actual column name in the 'employee' table
+            // If your column in 'employee' is 'department_name', change the left side:
+            department_name: document.getElementById('edit-dept').value, 
+            
             work_location: document.getElementById('edit-location').value,
             updated_at: new Date()
         };
 
         if (publicUrl) updates.avatar_url = publicUrl;
 
-        const { error } = await _supabase.from('employees').update(updates).eq('user_id', session.user.id);
+        const { error } = await _supabase.from('employee').update(updates).eq('user_id', session.user.id);
         if (error) throw error;
 
         showToast("Profile Updated", "Changes saved successfully.", "success");
@@ -272,6 +286,37 @@ function handleImageUpload(input) {
             previewCircle.style.border = '2px solid #6366f1';
         };
         reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function fetchDepartments() {
+    try {
+        const { data, error } = await _supabase
+            .from('department')
+            .select('department_name') // Matches your screenshot
+            .order('department_name', { ascending: true });
+
+        if (error) {
+            console.error("Fetch error:", error.message);
+            return;
+        }
+
+        const deptSelect = document.getElementById('edit-dept');
+        if (deptSelect) {
+            deptSelect.innerHTML = '<option value="">Select Department</option>';
+            
+            if (data) {
+                data.forEach(dept => {
+                    const option = document.createElement('option');
+                    // Use dept.department_name instead of dept.name
+                    option.value = dept.department_name;
+                    option.textContent = dept.department_name;
+                    deptSelect.appendChild(option);
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Connection error:", err.message);
     }
 }
 
@@ -371,7 +416,7 @@ function toggleNotifPanel() {
 }
 
 async function updateApplicantBadge() {
-    const { count } = await _supabase.from('employees').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
+    const { count } = await _supabase.from('employee').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
     const badge = document.getElementById('badge-count');
     if (badge) { badge.innerText = count || 0; badge.style.display = count > 0 ? 'inline-block' : 'none'; }
 }
