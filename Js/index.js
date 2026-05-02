@@ -2,7 +2,7 @@ const supabaseUrl = 'https://gsjnjktqqyxankennpau.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzam5qa3RxcXl4YW5rZW5ucGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzczMjksImV4cCI6MjA4OTkxMzMyOX0.ZrW8S0n3PkJJb_blIUkzgtav6REqPz6RI5zOniwR64E';
 const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-// ================= TOAST =================
+
 function showToast(message, type = 'info') {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -24,7 +24,7 @@ function showToast(message, type = 'info') {
     }, 4000);
 }
 
-// ================= RESET UI =================
+
 function resetLoginUI() {
     const submitBtn = document.querySelector('.btn-primary');
     const loginForm = document.querySelector('.login-form');
@@ -39,7 +39,7 @@ function resetLoginUI() {
     }
 }
 
-// ================= MAIN =================
+
 document.addEventListener('DOMContentLoaded', async () => {
 
     const loginForm = document.querySelector('.login-form');
@@ -47,18 +47,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.querySelector('.password-toggle');
 
-    // Detect login changes (Google / refresh)
+
     _supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
             await handleUserStatus(session.user);
         }
     });
 
-    // Existing session
+    
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) await handleUserStatus(session.user);
 
-    // Toggle password
+    
     if (togglePasswordBtn) {
         togglePasswordBtn.addEventListener('click', () => {
             const isPass = passwordInput.type === 'password';
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ================= GOOGLE LOGIN =================
+   
     if (googleBtn) {
         googleBtn.addEventListener('click', async () => {
             const { error } = await _supabase.auth.signInWithOAuth({
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ================= EMAIL LOGIN =================
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// ================= SIGN OUT =================
+
 async function handleSignOut() {
     try {
         const { data: { session } } = await _supabase.auth.getSession();
@@ -133,7 +133,7 @@ async function handleSignOut() {
     }
 }
 
-// ================= STATUS CHECK =================
+
 async function handleUserStatus(user) {
     try {
         const { data: appData, error } = await _supabase
@@ -144,7 +144,7 @@ async function handleUserStatus(user) {
 
         if (error) throw error;
 
-        // No profile yet
+    
         if (!appData) {
             showToast("Complete your profile...", "info");
             setTimeout(() => {
