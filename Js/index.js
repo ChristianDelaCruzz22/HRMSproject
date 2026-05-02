@@ -3,6 +3,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 
+
 function showToast(message, type = 'info') {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -58,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) await handleUserStatus(session.user);
 
-    
+
     if (togglePasswordBtn) {
         togglePasswordBtn.addEventListener('click', () => {
             const isPass = passwordInput.type === 'password';
@@ -66,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-   
+
     if (googleBtn) {
         googleBtn.addEventListener('click', async () => {
             const { error } = await _supabase.auth.signInWithOAuth({
@@ -79,7 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (error) showToast(error.message, "error");
         });
     }
-
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -144,7 +144,7 @@ async function handleUserStatus(user) {
 
         if (error) throw error;
 
-    
+
         if (!appData) {
             showToast("Complete your profile...", "info");
             setTimeout(() => {
