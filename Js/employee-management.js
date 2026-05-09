@@ -100,66 +100,6 @@ window.searchEmployees = () => {
 };
 
 
-window.openEditModal = async (userId) => {
-    
-    const emp = allEmployees.find(e => e.user_id === userId);
-    if (!emp) return;
-
-    if (userProfile.role === 'Admin' && emp.role === 'SuperAdmin') {
-        alert("Access Denied: Admins cannot modify SuperAdmin accounts.");
-        return;
-    }
-    
-    const deptDropdown = document.getElementById('editDepartment');
-    try {
-        const { data: depts, error: deptError } = await _supabase
-            .from('department')
-            .select('department_name');
-
-        if (depts && deptDropdown) {
-            
-            deptDropdown.innerHTML = depts.map(d => 
-                `<option value="${d.department_name}" ${d.department_name === emp.department ? 'selected' : ''}>
-                    ${d.department_name}
-                </option>`
-            ).join('');
-        }
-    } catch (err) {
-        console.error("Failed to sync departments:", err);
-    }
-    
-    const avatarContainer = document.getElementById('editModalAvatar');
-    const emailDisplay = document.getElementById('editModalEmail');
-
-    if (avatarContainer) {
-        if (emp.avatar_url) {
-            avatarContainer.innerHTML = `<img src="${emp.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-            avatarContainer.style.background = "transparent";
-        } else {
-            const initials = (emp.first_name[0] + emp.last_name[0]).toUpperCase();
-            avatarContainer.innerText = initials;
-            avatarContainer.style.background = "#f1f5f9";
-            avatarContainer.style.display = "flex";
-            avatarContainer.style.alignItems = "center";
-            avatarContainer.style.justifyContent = "center";
-        }
-    }
-
-    if (emailDisplay) {
-        emailDisplay.innerText = emp.email;
-    }
-
-    
-    document.getElementById('editUserId').value = emp.user_id;
-    document.getElementById('editFirstName').value = emp.first_name;
-    document.getElementById('editLastName').value = emp.last_name;
-    document.getElementById('editRole').value = emp.role;
-
-    
-    document.getElementById('editModal').style.display = 'flex';
-};
-
-
 window.closeEditModal = () => {
     document.getElementById('editModal').style.display = 'none';
 };
@@ -169,40 +109,38 @@ window.closeEditModal = () => {
 document.getElementById('editEmployeeForm').onsubmit = async (e) => {
     e.preventDefault();
     
-    
     const userId = document.getElementById('editUserId').value;
-    const adminName = document.getElementById('userName')?.innerText || "Admin";
-    
-    
     const emp = allEmployees.find(e => e.user_id === userId);
     
-    if (!emp) {
-        alert("Error: Employee data not found in local cache.");
-        return;
-    }
+    
+    const adminName = typeof userProfile !== 'undefined' 
+        ? `${userProfile.first_name} ${userProfile.last_name}` 
+        : "Admin";
+
+   
+    const newFirstName = document.getElementById('editFirstName').value;
+    const newLastName = document.getElementById('editLastName').value;
+    const newRole = document.getElementById('editRole').value;
+    const newDeptName = document.getElementById('editDepartment').value;
+    const newPosition = document.getElementById('editPosition').value;
 
     try {
         
-        const selectedDeptName = document.getElementById('editDepartment').value;
-        console.log("Searching for department ID for:", selectedDeptName);
-
-        const { data: deptData, error: deptLookupError } = await _supabase
+        const { data: deptData, error: deptError } = await _supabase
             .from('department')
             .select('id')
-            .ilike('department_name', selectedDeptName.trim())
+            .eq('department_name', newDeptName)
             .single();
-            
-        if (deptLookupError || !deptData) {
-            throw new Error(`Department '${selectedDeptName}' not found in the database master list.`);
-        }
+
+        if (deptError) throw new Error("Department not found");
 
         
         const { error: empError } = await _supabase
             .from('employee')
             .update({
-                first_name: document.getElementById('editFirstName').value.trim(),
-                last_name: document.getElementById('editLastName').value.trim(),
-                role: document.getElementById('editRole').value,
+                first_name: newFirstName,
+                last_name: newLastName,
+                role: newRole,
                 modified_by_name: adminName,
                 modified_at: new Date().toISOString()
             })
@@ -211,34 +149,47 @@ document.getElementById('editEmployeeForm').onsubmit = async (e) => {
         if (empError) throw empError;
 
         
-        console.log(`Syncing Job Table: Employee ${emp.id} -> Dept ${deptData.id}`);
-        
         const { error: jobError } = await _supabase
             .from('job')
             .upsert({
-                employee_id: emp.id,        
-                department_id: deptData.id, 
+                employee_id: emp.id,
+                department_id: deptData.id,
+                position: newPosition,
                 updated_at: new Date().toISOString()
-            }, { 
-                onConflict: 'employee_id'   
-            });
+            }, { onConflict: 'employee_id' });
 
         if (jobError) throw jobError;
 
         
-        alert("Employee and Department updated successfully!");
-        closeEditModal();
+        const { error: historyError } = await _supabase
+            .from('jobhistory')
+            .insert([{
+                employee_id: emp.id,
+                department_id: deptData.id,
+                position: newPosition,
+                role: newRole, 
+                status: 'Active',
+                start_date: new Date().toISOString() 
+            }]);
+
+        if (historyError) throw historyError;
+
+        
+        alert("Update Successful! Profile and Timeline are now in sync.");
+        
+        if (typeof closeEditModal === 'function') closeEditModal();
         
         
         if (typeof fetchEmployees === 'function') {
-            await fetchEmployees(); 
+            await fetchEmployees();
         }
 
     } catch (err) {
         console.error("Critical Update Failure:", err);
-        alert("Failed to update: " + err.message);
+        alert("Update failed: " + err.message);
     }
 };
+
 
 function renderUserUI() {
     if (!userProfile) return;
@@ -503,19 +454,30 @@ document.getElementById('addEmployeeForm').onsubmit = async (e) => {
     e.preventDefault();
 
     
+    const { data: sessionData } = await _supabase.auth.getSession();
+    const adminSession = sessionData.session;
+
+    const email = document.getElementById('addEmail').value.trim();
     const password = document.getElementById('addPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    const firstName = document.getElementById('addFirstName').value.trim();
+    const lastName = document.getElementById('addLastName').value.trim();
+    const selectedDept = document.getElementById('addDept').value;
+    const position = document.getElementById('addPosition').value.trim();
+    const dob = document.getElementById('addDOB').value;
+    const phone = document.getElementById('addPhone')?.value || null;
+    const intro = document.getElementById('addIntro')?.value || null;
+
+    const genderEl = document.querySelector('input[name="gender"]:checked');
+    const genderValue = genderEl ? genderEl.value : null;
+
     if (password !== confirmPassword) {
         alert("Passwords do not match!");
         return;
     }
 
-    const genderEl = document.querySelector('input[name="gender"]:checked');
-    const genderValue = genderEl ? genderEl.value : null;
-
     try {
-       
-        const selectedDept = document.getElementById('addDept').value;
+        
         const { data: deptData, error: deptLookupError } = await _supabase
             .from('department')
             .select('id')
@@ -523,54 +485,74 @@ document.getElementById('addEmployeeForm').onsubmit = async (e) => {
             .single();
 
         if (deptLookupError || !deptData) {
-            throw new Error(`Department '${selectedDept}' not found. Please ensure it exists in the master list.`);
+            throw new Error(`Department '${selectedDept}' not found.`);
         }
 
         
-        const newEmployeeData = {
-            user_id: crypto.randomUUID(), 
-            first_name: document.getElementById('addFirstName').value.trim(),
-            last_name: document.getElementById('addLastName').value.trim(),
-            email: document.getElementById('addEmail').value.trim(),
-            dob: document.getElementById('addDOB').value,
-            gender: genderValue,
-            contact: document.getElementById('addPhone')?.value || null, 
-            introduction: document.getElementById('addIntro')?.value || null, 
-            status: 'Pending',
-            role: 'User'
-        };
+        const { data: authData, error: authError } = await _supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: { first_name: firstName, last_name: lastName }
+            }
+        });
 
+        if (authError) throw authError;
+        const newAuthUserId = authData.user.id;
+
+        
         const { data: savedEmp, error: empError } = await _supabase
             .from('employee')
-            .insert([newEmployeeData])
+            .insert([{
+                user_id: newAuthUserId,
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                dob: dob,
+                gender: genderValue,
+                contact: phone,
+                introduction: intro,
+                status: 'Approved',
+                role: 'User'
+            }])
             .select() 
             .single();
 
         if (empError) throw empError;
 
+        
         const { error: jobError } = await _supabase
             .from('job')
             .insert([{
                 employee_id: savedEmp.id,
                 department_id: deptData.id,
-                position: document.getElementById('addPosition').value.trim()
+                position: position
             }]);
 
         if (jobError) throw jobError;
 
+        alert("Employee account created successfully!");
         
-        alert("New employee added successfully!");
+        
+        if (adminSession) {
+            await _supabase.auth.setSession(adminSession);
+            console.log("System: Admin session restored.");
+        }
+
         document.getElementById('addEmployeeForm').reset();
         closeAddModal();
-        
         
         if (typeof fetchEmployees === 'function') {
             await fetchEmployees();
         }
 
     } catch (err) {
-        console.error("Add Employee Error:", err);
-        alert("Failed to add employee: " + err.message);
+        console.error("Critical Add Error:", err);
+        
+        
+        if (adminSession) await _supabase.auth.setSession(adminSession);
+        
+        alert("Failed to create account: " + err.message);
     }
 };
 
@@ -602,28 +584,24 @@ window.togglePasswordVisibility = (inputId, iconId) => {
     const passwordInput = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
 
+    
+    if (!passwordInput || !icon) return;
+
     if (passwordInput.type === 'password') {
         
         passwordInput.type = 'text';
-        
         icon.classList.remove('fa-eye');
         icon.classList.add('fa-eye-slash');
         icon.style.color = '#3b82f6'; 
     } else {
-    
+        
         passwordInput.type = 'password';
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');
-        icon.style.color = '#94a3b8';
+        icon.style.color = '#94a3b8'; 
     }
 
-    const pass = document.getElementById('addPassword').value;
-    const confirmPass = document.getElementById('confirmPassword').value;
-
-    if (pass !== confirmPass) {
-        alert("Passwords do not match! Please check again.");
-        return; 
-}
+    
 };
 
 
@@ -671,10 +649,20 @@ function renderEmployeeTable(employees) {
                 </td>
                 <td>${emp.email}</td>
                 <td>${emp.role}</td>
+                <td style="font-weight: 500; color: #1e293b;">${emp.position || 'N/A'}</td>
                 <td>${emp.department || 'N/A'}</td>
                 <td><span class="status-tag status-${emp.status}">${emp.status}</span></td>
                 <td style="text-align:right;">
-                    <button class="btn-action" onclick="openEditModal('${emp.user_id}')"><i class="fa fa-pencil"></i></button>
+                    <!-- View Profile Button -->
+                    <button class="btn-action" title="View Profile" onclick="viewProfile('${emp.user_id}')">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    
+                    <!-- Edit/Promote Button -->
+                    <button class="btn-action" title="Edit/Promote" onclick="openEditModal('${emp.user_id}')">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+
                     <button class="btn-action ${isInactive ? 'btn-reactivate' : 'btn-delete'}" onclick="toggleStatus('${emp.user_id}', '${emp.status}')">
                         <i class="fa ${isInactive ? 'fa-unlock' : 'fa-ban'}"></i>
                     </button>
@@ -682,6 +670,378 @@ function renderEmployeeTable(employees) {
             </tr>
         `;
     });
+}
+
+
+
+const setField = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.value = value || '';
+    } else {
+        console.warn(`Missing HTML Element: ID "${id}" not found.`);
+    }
+};
+
+window.viewProfile = async (userId) => {
+    const emp = allEmployees.find(e => e.user_id === userId);
+    if (!emp) return;
+
+    
+    document.getElementById('editModal').style.display = 'flex';
+    document.getElementById('viewProfileCard').style.display = 'block';
+    document.getElementById('editFormContainer').style.display = 'none';
+
+    
+    const avatarContainer = document.getElementById('viewModalAvatar');
+    avatarContainer.style.cssText = 'display: flex; justify-content: center; margin-bottom: 20px;';
+
+    if (emp.avatar_url) {
+        avatarContainer.innerHTML = `<img src="${emp.avatar_url}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">`;
+    } else {
+        const initials = ((emp.first_name?.[0] || '') + (emp.last_name?.[0] || '')).toUpperCase();
+        avatarContainer.innerHTML = `<div style="width:100px; height:100px; border-radius:50%; background:#6366f1; color:white; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">${initials}</div>`;
+    }
+
+    
+    document.getElementById('viewFullDisplayName').innerText = `${emp.first_name} ${emp.last_name}`;
+    document.getElementById('viewCurrentEmail').innerText = emp.email || 'N/A';
+
+    
+    document.getElementById('viewCurrentPosition').innerText = emp.position || 'Position Not Set';
+    document.getElementById('viewCurrentDept').innerText = emp.department || 'N/A';
+
+    
+    fetchJobHistory(emp.id); 
+};
+
+async function renderTimeline(employeeId) {
+    const container = document.getElementById('jobTimelineSection');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center; font-size:12px; color:#94a3b8;">Loading history...</p>';
+
+    
+    const { data: history, error } = await _supabase
+        .from('jobhistory')
+        .select(`
+            position,
+            start_date,
+            department:department_id ( name )
+        `)
+        .eq('employee_id', employeeId)
+        .order('start_date', { ascending: false });
+
+    if (error || !history || history.length === 0) {
+        container.innerHTML = `
+            <div style="border: 1px dashed #e2e8f0; border-radius: 12px; padding: 20px; text-align: center;">
+                <p style="font-size: 13px; color: #94a3b8; margin: 0;">No job history recorded yet.</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = history.map((item, index) => {
+        const isCurrent = index === 0;
+        
+        const dateStr = new Date(item.start_date).toLocaleDateString('en-US', { 
+            month: 'short', day: 'numeric', year: 'numeric' 
+        });
+
+        return `
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; position: relative;">
+                <!-- Vertical Line -->
+                ${index !== history.length - 1 ? '<div style="position:absolute; left:6px; top:20px; bottom:-20px; width:2px; background:#f1f5f9;"></div>' : ''}
+                
+                <!-- Dot -->
+                <div style="width:14px; height:14px; border-radius:50%; background:${isCurrent ? '#3b82f6' : '#cbd5e1'}; border: 3px solid #fff; z-index:1; margin-top:4px; box-shadow: 0 0 0 1px #f1f5f9;"></div>
+                
+                <!-- Content Card -->
+                <div style="flex:1; background:#fff; border: 1px solid #f1f5f9; padding:12px; border-radius:12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-weight:700; color:#1e293b; font-size:13px;">${item.position}</span>
+                        ${isCurrent ? '<span style="background:#dcfce7; color:#166534; font-size:9px; font-weight:800; padding:2px 8px; border-radius:10px;">PRESENT</span>' : ''}
+                    </div>
+                    <div style="font-size:11px; color:#64748b; display:flex; gap:10px;">
+                        <span><i class="fa fa-sitemap"></i> ${item.department?.name || 'No Dept'}</span>
+                        <span><i class="fa fa-calendar"></i> ${dateStr}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function handlePromotion(employeeId, newPosition, newDeptId) {
+   
+    const { error: jobError } = await _supabase
+        .from('job')
+        .update({ 
+            position: newPosition, 
+            department_id: newDeptId,
+            updated_at: new Date().toISOString() 
+        })
+        .eq('employee_id', employeeId);
+
+    if (jobError) throw jobError;
+
+    
+    const { error: historyError } = await _supabase
+        .from('jobhistory')
+        .insert([{
+            employee_id: employeeId,
+            position: newPosition,
+            department_id: newDeptId,
+            start_date: new Date().toISOString(),
+            status: 'Active' 
+        }]);
+
+    if (historyError) throw historyError;
+    
+    
+    alert("Promotion recorded successfully!");
+}
+
+async function fetchJobHistory(employeeId) {
+    const historyContainer = document.getElementById('jobTimelineSection');
+    const headerPosition = document.getElementById('viewCurrentPosition');
+    const headerDept = document.getElementById('viewCurrentDept');
+    
+    if (!historyContainer) return;
+
+    historyContainer.innerHTML = '<p style="text-align:center; font-size:12px; color:#94a3b8;">Loading history...</p>';
+
+    try {
+        
+        const { data, error } = await _supabase
+            .from('jobhistory')
+            .select(`
+                position,
+                start_date,
+                department:department_id ( department_name )
+            `)
+            .eq('employee_id', employeeId)
+            .order('start_date', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            historyContainer.innerHTML = `<div ...>No job history recorded yet.</div>`;
+            
+            headerPosition.innerText = "No Position Set";
+            headerDept.innerText = "N/A";
+            return;
+        }
+
+        
+        const latestJob = data[0];
+        headerPosition.innerText = latestJob.position;
+        headerDept.innerText = latestJob.department?.department_name || 'General';
+        
+
+        historyContainer.innerHTML = data.map((job, index) => {
+            const isCurrent = index === 0; 
+            const startDate = new Date(job.start_date).toLocaleDateString('en-US', { 
+                month: 'short', day: 'numeric', year: 'numeric' 
+            });
+
+            return `
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; position: relative;">
+                ${index !== data.length - 1 ? '<div style="position:absolute; left:6px; top:20px; bottom:-20px; width:2px; background:#f1f5f9;"></div>' : ''}
+                <div style="width:14px; height:14px; border-radius:50%; background:${isCurrent ? '#3b82f6' : '#cbd5e1'}; border: 3px solid #fff; z-index:1; margin-top:4px; box-shadow: 0 0 0 1px #f1f5f9;"></div>
+                <div style="flex:1; background:#fff; border: 1px solid #f1f5f9; padding:12px; border-radius:12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-weight:700; color:#1e293b; font-size:13px;">${job.position}</span>
+                        ${isCurrent ? '<span style="background:#dcfce7; color:#166534; font-size:9px; font-weight:800; padding:2px 8px; border-radius:10px;">PRESENT</span>' : ''}
+                    </div>
+                    <div style="font-size:11px; color:#64748b; display:flex; gap:10px;">
+                        <span><i class="fa fa-sitemap"></i> ${job.department?.department_name || 'General'}</span>
+                        <span><i class="fa fa-calendar"></i> ${startDate}</span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (err) {
+        console.error("Timeline Fetch Error:", err);
+        historyContainer.innerHTML = '<p style="color:red; font-size:12px;">Failed to load history.</p>';
+    }
+}
+
+
+async function recordJobHistory(userId, position, department) {
+    const { error } = await _supabase
+        .from('jobhistory')
+        .insert([{
+            user_id: userId,
+            position: position,
+            department: department,
+            effective_date: new Date().toISOString() 
+        }]);
+
+    if (error) console.error("Error recording history:", error);
+}
+
+window.editProfile = (userId) => {
+    const emp = allEmployees.find(e => e.user_id === userId);
+    if (!emp) return;
+
+    
+    document.getElementById('viewProfileCard').style.display = 'none';
+    document.getElementById('editFormContainer').style.display = 'block';
+
+    
+    const editAvatarContainer = document.getElementById('editModalAvatar'); 
+    editAvatarContainer.style.cssText = 'display: flex; justify-content: center; margin-bottom: 20px;';
+    
+    const initials = ((emp.first_name?.[0] || '') + (emp.last_name?.[0] || '')).toUpperCase();
+    editAvatarContainer.innerHTML = emp.avatar_url 
+        ? `<img src="${emp.avatar_url}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">`
+        : `<div style="width:100px; height:100px; border-radius:50%; background:#6366f1; color:white; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; border: 4px solid #fff;">${initials}</div>`;
+
+    
+    document.getElementById('editFirstName').value = emp.first_name || '';
+    document.getElementById('editLastName').value = emp.last_name || '';
+    document.getElementById('editPosition').value = emp.position || '';
+    document.getElementById('editDepartment').value = emp.department_id || '';
+    document.getElementById('editAccessRole').value = emp.role || 'Employee'; 
+
+    
+    document.getElementById('saveProfileBtn').onclick = () => saveProfileChanges(emp);
+};
+
+async function saveProfileChanges(oldData) {
+    
+    const newFirstName = document.getElementById('editFirstName').value;
+    const newLastName = document.getElementById('editLastName').value;
+    const newPosition = document.getElementById('editPosition').value; 
+    const newDeptName = document.getElementById('editDepartment').value;
+    const newRole = document.getElementById('editRole').value;
+
+    try {
+        
+        const { data: deptData } = await _supabase
+            .from('department')
+            .select('id')
+            .eq('department_name', newDeptName)
+            .single();
+
+        const deptId = deptData ? deptData.id : null;
+
+    
+        const { error: updateError } = await _supabase
+            .from('employee')
+            .update({
+                first_name: newFirstName,
+                last_name: newLastName,
+                role: newRole,
+                modified_at: new Date().toISOString()
+            })
+            .eq('id', oldData.id); 
+
+        if (updateError) throw updateError;
+
+        
+        await _supabase.from('job').upsert({
+            employee_id: oldData.id,
+            department_id: deptId,
+            position: newPosition,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'employee_id' });
+
+        
+        const { error: historyError } = await _supabase
+            .from('jobhistory')
+            .insert([{
+                employee_id: oldData.id,
+                department_id: deptId,
+                position: newPosition,
+                status: 'Active',
+                start_date: new Date().toISOString() 
+            }]);
+
+        if (historyError) throw historyError;
+
+        alert("Profile and Timeline updated successfully!");
+        
+        
+        closeEditModal();
+        await fetchEmployees(); 
+        
+    } catch (err) {
+        console.error("Save failed:", err);
+        alert("Error: " + err.message);
+    }
+}
+
+
+window.openEditModal = async (userId) => {
+    const emp = allEmployees.find(e => e.user_id === userId);
+    if (!emp) return;
+
+   
+    document.getElementById('editModal').style.display = 'flex';
+    document.getElementById('viewProfileCard').style.display = 'none';
+    document.getElementById('editFormContainer').style.display = 'block';
+
+    
+    document.getElementById('editUserId').value = emp.user_id;
+    document.getElementById('editFirstName').value = emp.first_name || '';
+    document.getElementById('editLastName').value = emp.last_name || '';
+    document.getElementById('editRole').value = emp.role || 'User';
+    document.getElementById('editPosition').value = emp.position || '';
+    
+ 
+    await syncDepartmentDropdown('editDepartment');
+    document.getElementById('editDepartment').value = emp.department || '';
+
+    
+    const editAvatar = document.getElementById('editModalAvatar');
+    if (editAvatar) {
+        if (emp.avatar_url) {
+            editAvatar.innerHTML = `<img src="${emp.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        } else {
+            const initials = ((emp.first_name?.[0] || '') + (emp.last_name?.[0] || '')).toUpperCase();
+            editAvatar.innerText = initials;
+        }
+    }
+
+    document.getElementById('saveProfileBtn').onclick = () => saveProfileChanges(emp);
+};
+
+function renderModalAvatar(emp) {
+    const container = document.getElementById('editModalAvatar');
+    if (!container) return;
+    
+    if (emp.avatar_url) {
+        container.innerHTML = `<img src="${emp.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    } else {
+        const initials = ((emp.first_name?.[0] || '') + (emp.last_name?.[0] || '')).toUpperCase();
+        container.innerText = initials;
+        container.style.background = "#f1f5f9";
+        container.style.display = "flex";
+        container.style.alignItems = "center";
+        container.style.justifyContent = "center";
+    }
+}
+
+// Helper function to avoid repeating code
+async function fillModalData(emp) {
+    document.getElementById('editUserId').value = emp.user_id;
+    document.getElementById('editFirstName').value = emp.first_name || '';
+    document.getElementById('editLastName').value = emp.last_name || '';
+    document.getElementById('editRole').value = emp.role || '';
+    document.getElementById('editPosition').value = emp.position || '';
+    
+    await syncDepartmentDropdown('editDepartment');
+    document.getElementById('editDepartment').value = emp.department || '';
+
+    const avatarContainer = document.getElementById('editModalAvatar');
+    if (avatarContainer) {
+        if (emp.avatar_url) {
+            avatarContainer.innerHTML = `<img src="${emp.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        } else {
+            avatarContainer.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:50%; font-weight:bold;">${(emp.first_name[0] + emp.last_name[0]).toUpperCase()}</div>`;
+        }
+    }
 }
 
 window.toggleStatus = async (userId, currentStatus) => {

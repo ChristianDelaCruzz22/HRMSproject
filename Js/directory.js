@@ -123,33 +123,55 @@ async function updateBadges() {
 
 window.fetchDirectory = async () => {
     try {
+        const grid = document.getElementById('directoryGrid');
+        
+        
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) return;
+
+        
         const { data, error } = await _supabase
             .from('employee')
             .select(`
                 *,
-                jobhistory (
+                job (
+                    department_id,
                     position,
-                    end_date,
                     department ( department_name )
                 )
             `)
-            .eq('status', 'Approved')
             .order('last_name', { ascending: true });
 
         if (error) throw error;
 
-        allApprovedEmployees = data.map(emp => {
-            const currentJob = emp.jobhistory?.find(job => !job.end_date);
+        
+        const filteredData = data.filter(emp => {
+            
+            if (userProfile.role !== 'SuperAdmin' && emp.role === 'SuperAdmin') {
+                
+                return emp.user_id === session.user.id; 
+            }
+            return true;
+        });
+
+        
+        allApprovedEmployees = filteredData.map(emp => {
             return {
                 ...emp,
-                position: currentJob?.position || emp.position || "Employee",
-                department_name: currentJob?.department?.department_name || emp.department_name || "General"
+                role: emp.role,
+                dept_id: emp.job ? emp.job.department_id : null,
+                position: emp.job ? emp.job.position : "Staff",
+                department_name: emp.job?.department?.department_name || "Operations"
             };
         });
 
+        
         renderDirectoryCards(allApprovedEmployees);
+
     } catch (err) {
-        console.error("Fetch Error:", err);
+        console.error("Directory Critical Error:", err);
+        const grid = document.getElementById('directoryGrid');
+        if (grid) grid.innerHTML = `<p style="color:red; padding: 20px;">Error: ${err.message}</p>`;
     }
 };
 
@@ -191,20 +213,20 @@ function renderDirectoryCards(list) {
 window.filterDirectory = () => {
     const searchTerm = document.getElementById('dirSearch').value.toLowerCase().trim();
     const deptFilter = document.getElementById('filterDept').value; 
+    const roleFilter = document.getElementById('filterRole').value; 
 
     const filtered = allApprovedEmployees.filter(emp => {
+        
         const fullName = `${emp.first_name || ''} ${emp.last_name || ''}`.toLowerCase();
         const matchesSearch = fullName.includes(searchTerm);
         
-        // 1. If "All" is selected, just match the search term
-        if (deptFilter === 'all') return matchesSearch;
+        
+        const matchesDept = (deptFilter === 'all') || (emp.dept_id === deptFilter);
 
-        // 2. Match against the ID (UUID) or the String Name
-        // This ensures compatibility regardless of how the dropdown was populated
-        const matchesDept = (emp.department_id === deptFilter) || 
-                            (emp.department_name === deptFilter);
 
-        return matchesSearch && matchesDept;
+        const matchesRole = (roleFilter === 'all') || (emp.role === roleFilter);
+
+        return matchesSearch && matchesDept && matchesRole;
     });
 
     renderDirectoryCards(filtered);
@@ -224,7 +246,7 @@ async function loadFilterDepartments() {
 
         let html = '<option value="all">All Departments</option>';
         depts.forEach(d => {
-            // We use the UUID (d.id) as the value for precise matching
+            
             html += `<option value="${d.id}">${d.department_name}</option>`;
         });
         
@@ -237,7 +259,7 @@ async function loadFilterDepartments() {
 // Function to populate the Filter Dropdown from the DB
 async function populateFilterDepartments() {
     const { data: departments, error } = await _supabase
-        .from('department') // Ensure this matches your table name
+        .from('department') 
         .select('id, name')
         .order('name', { ascending: true });
 
@@ -249,12 +271,12 @@ async function populateFilterDepartments() {
     const filterDeptSelect = document.getElementById('filterDept');
     if (!filterDeptSelect) return;
 
-    // Keep "All Departments", then append the rest
+    
     filterDeptSelect.innerHTML = '<option value="all">All Departments</option>';
     
     departments.forEach(dept => {
         const option = document.createElement('option');
-        option.value = dept.id; // Store ID for precise filtering
+        option.value = dept.id; 
         option.textContent = dept.name;
         filterDeptSelect.appendChild(option);
     });
@@ -265,17 +287,14 @@ async function fetchJobHistory(employeeUuid) {
     if (!historyContainer) return;
 
     try {
-        // Fetching from your 'jobhistory' table
-        // Joining with 'department' table using the foreign key
         const { data, error } = await _supabase
             .from('jobhistory')
             .select(`
                 *,
                 department ( department_name )
-                promoter:modified_by ( first_name, last_name )
             `)
             .eq('employee_id', employeeUuid)
-            .order('start_date', { ascending: false });
+            .order('start_date', { ascending: false }); 
 
         if (error) throw error;
 
@@ -284,22 +303,25 @@ async function fetchJobHistory(employeeUuid) {
             return;
         }
 
-        historyContainer.innerHTML = data.map(job => {
-            const isCurrent = !job.end_date;
+        historyContainer.innerHTML = data.map((job, index) => {
+            
+            const isLatest = index === 0 && !job.end_date;
+            
             const startDate = new Date(job.start_date).toLocaleDateString('en-US', { 
                 month: 'short', day: 'numeric', year: 'numeric' 
             });
-            const endDate = isCurrent ? 'Present' : new Date(job.end_date).toLocaleDateString('en-US', { 
-                month: 'short', day: 'numeric', year: 'numeric' 
-            });
+            
+            const endDate = job.end_date 
+                ? new Date(job.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+                : (isLatest ? 'Present' : 'Ended');
 
             return `
-            <div style="padding: 12px; border-left: 3px solid ${isCurrent ? '#3b82f6' : '#cbd5e1'}; margin-bottom: 12px; position: relative; padding-left: 20px; background: white; border-radius: 0 8px 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <div style="width: 12px; height: 12px; background: ${isCurrent ? '#3b82f6' : '#94a3b8'}; border-radius: 50%; position: absolute; left: -8px; top: 16px; border: 2px solid white;"></div>
+            <div style="padding: 12px; border-left: 3px solid ${isLatest ? '#3b82f6' : '#cbd5e1'}; margin-bottom: 12px; position: relative; padding-left: 20px; background: white; border-radius: 0 8px 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="width: 12px; height: 12px; background: ${isLatest ? '#3b82f6' : '#94a3b8'}; border-radius: 50%; position: absolute; left: -8px; top: 16px; border: 2px solid white;"></div>
                 
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <strong style="font-size:14px; color:#1e293b;">${job.position}</strong>
-                    ${isCurrent ? '<span style="background:#dcfce7; color:#15803d; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">CURRENT</span>' : ''}
+                    ${isLatest ? '<span style="background:#dcfce7; color:#15803d; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">CURRENT</span>' : ''}
                 </div>
                 
                 <div style="font-size:12px; color:#475569; margin-top: 4px;">
@@ -310,7 +332,6 @@ async function fetchJobHistory(employeeUuid) {
                 
                 <div style="margin-top: 8px; font-size:11px; color:#94a3b8; font-weight: 500;">
                     ${startDate} — ${endDate}
-                    
                 </div>
             </div>
             `;
@@ -327,7 +348,7 @@ window.showFullProfile = async (userId) => {
 
     const modal = document.getElementById('profileViewModal');
     
-    // REMOVED: isAdmin check and Promotion Form HTML
+    
     modal.innerHTML = `
         <div class="modal-content-card" style="max-width: 600px; width: 90%;">
             <button class="modal-close-btn" onclick="closeProfileModal()"><i class="fa fa-times"></i></button>
