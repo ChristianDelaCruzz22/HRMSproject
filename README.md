@@ -94,7 +94,6 @@ Dynamic dashboard based on user role:
 - HTML5
 - CSS3
 - JavaScript (Vanilla JS)
-- Chart.js
 - Font Awesome
 
 ## Backend & Database
@@ -109,30 +108,6 @@ Dynamic dashboard based on user role:
 
 ---
 
-# Database Tables
-
-The system currently uses the following main tables:
-
-| Table Name | Purpose |
-|---|---|
-| employee | Employee and applicant information |
-| job | Current employee position |
-| jobhistory | Promotion and career history |
-| departments | Department information |
-| notifications | System notifications |
-
----
-
-# Role Access
-
-| Role | Access Level |
-|---|---|
-| SuperAdmin | Full system access |
-| Admin | Employee and recruitment management |
-| User | Personal profile and directory access |
-
----
-
 # System Modules
 
 - Dashboard
@@ -140,23 +115,12 @@ The system currently uses the following main tables:
 - Employee Management
 - Directory
 - Departments
-- Profile Management
 - Notifications
 
 ---
 
 # Project Goal
 The goal of this project is to provide a scalable and modern HR management platform that simplifies employee administration, recruitment workflows, and organizational management while maintaining secure role-based access.
-
----
-
-# Developers Notes
-This project is continuously improving and may include future modules such as:
-- Attendance Monitoring
-- Leave Management
-- Payroll System
-- Reports and Analytics
-- Training Management
 
 ---
 
