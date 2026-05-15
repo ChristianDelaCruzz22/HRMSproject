@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="Icon2.png">
+    <link rel="stylesheet" href="./Css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2><img src="Icon2.png" alt="Logo"> HRMS</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+        <div class="nav-group-label">Core</div>
+        <div class="nav-item active" id="nav-dashboard">
+            <a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a>
+        </div>
+        
+        <div class="auth-admin">
+            <div class="nav-group-label">Talent & Growth</div>
+            <div class="nav-item"><a href="employee-management.html" class="nav-link"><i class="fa fa-id-badge"></i> Employee Managemennt</a></div>
+            <div class="nav-item"><a href="directory.html" class="nav-link"><i class="fa fa-users"></i> Directory</a></div>
+            <div class="nav-item"><a href="departments.html" class="nav-link"><i class="fa fa-sitemap"></i> Departments</a></div>
+            <div class="nav-item" id="nav-recruitment">
+                <a href="recruitment.html" class="nav-link">
+                    <i class="fa fa-rocket"></i> Recruitment 
+                    <span id="badge-count" class="badge-notif" style="display: none;">0</span>
+                </a>
+            </div>
+            <div class="nav-item" hidden><a href="training.html" class="nav-link"><i class="fa fa-graduation-cap"></i> Training</a></div>
+        </div>
+
+    </div>
+</div>  
+
+<div class="main">
+    <header class="topbar">
+        <h3 id="topbar-title" style="font-size: 18px; font-weight: 700;">Dashboard Overview</h3>
+        
+        <div class="topbar-right">
+            <div class="notif-wrapper">
+                <div class="notif-icon-container" onclick="toggleNotifPanel()">
+                    <i class="fa fa-bell-o"></i>
+                    <span id="notif-badge" class="badge-notif" style="display:none;">0</span>
+                </div>
+                
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header"><span>Notifications</span></div>
+                    <div id="notif-list" class="notif-list">
+                        <div class="notif-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="role-switcher-wrapper" id="superAdminTools" style="display: none;">
+                <select id="roleSwitcher" onchange="previewRole(this.value)">
+                    <option value="SuperAdmin">CEO (SuperAdmin)</option>
+                    <option value="Admin">Manager (Admin)</option>
+                    <option value="User">Employee (User)</option>
+                </select>
+            </div>
+
+            <div class="profile-trigger" onclick="toggleDropdown()">
+                <div class="profile-info">
+                    <span class="profile-name" id="userName">Loading...</span>
+                    <span class="profile-role" id="userRole">...</span>
+                </div>
+                <div class="profile-thumb" id="userInitials">--</div>
+                
+                <div class="dropdown-menu" id="profileMenu">
+                    <a href="profile.html" class="dropdown-item"><i class="fa fa-user-circle-o"></i> My Profile</a>
+                    <a href="preferences.html" class="dropdown-item"><i class="fa fa-cog"></i> Preferences</a>
+                    <hr style="margin: 5px 0; border: 0; border-top: 1px solid #f1f5f9;">
+                    <div class="dropdown-item" style="color: #ef4444;" onclick="handleSignOut()">
+                        <i class="fa fa-sign-out"></i> Sign Out
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <section class="dashboard-header">
+            <div class="welcome-text">
+                <h1 id="welcome-message">Good Morning, <span id="userName">User</span>!</h1>
+                <p id="dashboard-date">Tuesday, May 12, 2026</p>
+            </div>
+            <div class="role-indicator">
+                <span class="badge-role" id="department-badge">
+                    <span class="label-text">Department:</span> 
+                    <span id="department-tag">Loading...</span>
+                </span>
+                
+                <span class="badge-role" id="role-badge">
+                    <span class="label-text">Role:</span> 
+                    <span id="role-tag">Loading...</span>
+                </span>
+            </div>
+        </section>
+
+        <section class="stats-grid" id="stats-container">
+            <div class="stat-card-new skeleton"></div>
+            <div class="stat-card-new skeleton"></div>
+            <div class="stat-card-new skeleton"></div>
+            <div class="stat-card-new skeleton"></div>
+        </section>
+
+        <div class="dashboard-grid-layout">
+            
+            <div class="column-left">
+                
+                <div class="content-card chart-main" id="analytics-panel">
+                    <div class="card-header">
+                        <h3><i class="fa fa-line-chart"></i> Company Hiring & Growth</h3>
+                        <div class="card-actions">
+                            <select id="timeFilter" class="chart-filter" onchange="updateChartData()">
+                            <option value="6">Last 6 Months</option>
+                            <option value="12" selected>Last Year</option>
+                        </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 id="table-title"><i class="fa fa-list-alt"></i> Recent Activity</h3>
+                        <div class="search-box">
+                            <i class="fa fa-search"></i>
+                            <input type="text" id="activitySearch" placeholder="Search activity..." onkeyup="handleActivitySearch()">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="hrms-table">
+                            <thead>
+                                <tr id="table-head">
+                                    <th>Employee</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-body">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div id="table-empty" style="display:none;" class="empty-state">
+                        <i class="fa fa-folder-open-o"></i>
+                        <p>No records found for this period.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column-right">
+                
+                <div class="content-card">
+                    <div class="card-header"><h3>Quick Actions</h3></div>
+                    <div class="quick-actions-grid" id="actions-list">
+                        </div>
+                </div>
+
+                <div class="content-card" id="side-chart-panel">
+                    <div class="card-header"><h3>Staff Distribution</h3></div>
+                    <div class="chart-container-small">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header"><h3>Latest Updates</h3></div>
+                    <div class="notification-feed" id="announcement-list">
+                        <div class="feed-item">
+                            <div class="feed-icon"><i class="fa fa-bullhorn"></i></div>
+                            <div class="feed-content">
+                                <strong>System Update</strong>
+                                <p>Version 2.0 HRMS is now live.</p>
+                                <span>2 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="directoryDrawer" class="side-drawer">
+    <div class="drawer-header">
+        <div class="header-title">
+            <i class="fa fa-users"></i>
+            <span>Employee Directory</span>
+        </div>
+        <button onclick="toggleDirectoryDrawer()" class="close-btn">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="drawer-search-container">
+        <div class="search-wrapper">
+            <i class="fa fa-search"></i>
+            <input type="text" id="drawerSearchInput" placeholder="Search by name or dept..." onkeyup="filterDrawerList()">
+        </div>
+    </div>
+
+    <div id="drawerEmployeeList" class="drawer-content">
+        </div>
+</div>
+<div id="drawerOverlay" class="drawer-overlay" onclick="toggleDirectoryDrawer()"></div>
+
+<script src="./Js/dashboard.js"></script>
+<script src="./Js/recruitment.js"></script>
+<script src="./Js/profile.js"></script>
+<script src="./Js/preferences.js"></script>
+</body>
+</html>
