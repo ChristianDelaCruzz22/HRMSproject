@@ -7,7 +7,7 @@ This system streamlines HR operations by providing role-based access for CEOs (S
 
 The project is built using modern web technologies and integrates with Supabase for authentication, database management, and real-time data handling.
 
----
+--- 
 
 # Features
 
