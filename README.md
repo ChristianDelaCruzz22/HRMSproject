@@ -1,103 +1,144 @@
 # Human Resource Management System (HRMS)
 
-## Overview
-The Human Resource Management System (HRMS) is a web-based application designed to help organizations manage employee information, recruitment processes, departmental structures, and workforce monitoring in a centralized platform.
+A modern, web-based Human Resource Management System designed to centralize employee management, recruitment workflows, departmental organization, and workforce monitoring in one secure platform.
 
-This system streamlines HR operations by providing role-based access for CEOs (SuperAdmins), Managers (Admins), and Employees (Users). It allows administrators to oversee recruitment, employee records, departments, and organizational data while enabling employees to manage their profiles and view company information.
-
-The project is built using modern web technologies and integrates with Supabase for authentication, database management, and real-time data handling.
+Built with modern web technologies and powered by Supabase for authentication, database management, realtime updates, and storage.
 
 ---
 
-# Features
+## Live Demo
 
-## Authentication & Access Control
-- Secure login and registration system
-- Google OAuth authentication
-- Role-based access control (RBAC)
-- Status-based account verification
+Live Deployment:  
+https://hrm-sproject.vercel.app/
+
+---
+
+#  Overview
+
+The Human Resource Management System (HRMS) helps organizations efficiently manage employees, recruitment, departments, and workforce operations through a centralized platform.
+
+The system supports role-based access control for:
+
+- CEO (SuperAdmin)
+- Manager (Admin)
+- Employee (User)
+
+Each role has access to specific modules and dashboards tailored to their responsibilities.
+
+---
+
+#  Features
+
+##  Authentication & Security
+
+- Secure Login & Registration
+- Google OAuth Authentication
+- Role-Based Access Control (RBAC)
+- Account Verification System
 - Supabase Row Level Security (RLS)
-- wawawiwaw
+- Protected Routes & Secure Data Access
 
 ---
 
-## Dashboard
-Dynamic dashboard based on user role:
+#  Dashboard System
 
-### CEO (SuperAdmin)
-- Workforce analytics
-- Employee statistics
-- Recruitment overview
-- Department monitoring
-- Promotion tracking
+Dynamic dashboards customized based on user roles.
 
-### Manager (Admin)
-- Team monitoring
-- Recruitment management
-- Employee activity overview
-- Department visibility
+## CEO (SuperAdmin)
 
-### Employee (User)
-- Personal profile overview
-- Position and department information
-- Promotion history
-- Notifications
+- Workforce Analytics
+- Employee Statistics
+- Recruitment Overview
+- Department Monitoring
+- Promotion Tracking
+- Organization-wide Visibility
 
----
+##  Manager (Admin)
 
-## Recruitment Module
-- Applicant management
-- Pending / Approved / Rejected application handling
-- Resume viewing
-- Recruitment notifications
-- Applicant status tracking
+- Team Monitoring
+- Recruitment Management
+- Employee Activity Overview
+- Department Visibility
+- Staff Management
+
+##  Employee (User)
+
+- Personal Profile Overview
+- Position & Department Information
+- Promotion History
+- Notifications & Updates
 
 ---
 
-## Employee Management
-- Employee records management
-- Position assignment
-- Department assignment
-- Employee status monitoring
-- Promotion management
+#  Recruitment Module
+
+- Applicant Management
+- Resume Viewing
+- Application Tracking
+- Pending / Approved / Rejected Status Handling
+- Recruitment Notifications
+- Candidate Monitoring
 
 ---
 
-## Directory
-- Employee directory listing
-- Search employees by:
-  - Name
-  - Department
-  - Position
-- Company-wide employee visibility
+#  Employee Management
+
+- Employee Records Management
+- Position Assignment
+- Department Assignment
+- Employee Status Monitoring
+- Promotion Management
+- Workforce Organization
 
 ---
 
-## Departments
-- Department management
-- Department codes and descriptions
-- Employee distribution tracking
-- Organizational structure overview
+#  Employee Directory
+
+Search and browse employees across the organization.
+
+### Search Filters
+
+- Employee Name
+- Department
+- Position
+
+### Features
+
+- Company-wide Employee Visibility
+- Organized Employee Listings
+- Quick Search & Access
 
 ---
 
-## Job History
-- Employee promotion tracking
-- Previous positions
-- Career growth monitoring
-- Employment background history
+#  Department Management
+
+- Department Creation & Management
+- Department Codes & Descriptions
+- Employee Distribution Tracking
+- Organizational Structure Overview
 
 ---
 
-# Technologies Used
+#  Job History & Promotions
+
+- Promotion Tracking
+- Previous Position Records
+- Career Growth Monitoring
+- Employment History Management
+
+---
+
+#  Technologies Used
 
 ## Frontend
+
 - HTML5
 - CSS3
 - JavaScript (Vanilla JS)
 - Font Awesome
 
 ## Backend & Database
+
 - Supabase
 - PostgreSQL
 - Supabase Authentication
@@ -105,11 +146,12 @@ Dynamic dashboard based on user role:
 - Supabase Storage
 
 ## Deployment
+
 - Vercel
 
 ---
 
-# System Modules
+#  System Modules
 
 - Dashboard
 - Recruitment
@@ -120,16 +162,46 @@ Dynamic dashboard based on user role:
 
 ---
 
-# Project Goal
-The goal of this project is to provide a scalable and modern HR management platform that simplifies employee administration, recruitment workflows, and organizational management while maintaining secure role-based access.
+#  Project Goal
+
+The goal of this project is to provide a scalable, secure, and modern HR management platform that simplifies:
+
+- Employee Administration
+- Recruitment Workflows
+- Organizational Management
+- Workforce Monitoring
+
+while maintaining strong role-based security and centralized data management.
 
 ---
 
-# Deployment
-Live Deployment:
-https://hrm-sproject.vercel.app/
+#  Access Control Structure
+
+| Role | Access Level |
+|------|--------------|
+| CEO (SuperAdmin) | Full System Access |
+| Manager (Admin) | Department & Team Management |
+| Employee (User) | Personal Information & Company Visibility |
 
 ---
 
-# License
-This project is intended for educational and academic purposes.
+#  Deployment
+
+The project is deployed using:
+
+- Vercel
+
+
+---
+
+#  Contributors
+
+Developed for educational and academic purposes.
+
+- Christian Dela Cruz
+- Josh Visitacion
+- Wesly Quilendireno
+- Felicity Zoe Villa
+- Rajah Renzuken Lamsen
+
+---
