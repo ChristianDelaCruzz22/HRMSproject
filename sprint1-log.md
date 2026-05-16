@@ -141,7 +141,6 @@ TOTAL PR - 3
 | PR-02 | feat/auth-email-signup | signUp() + signIn() wired to Register/Login |
 | PR-03 | feat/auth-google-oauth | signInWithOAuth + /auth/callback route + redirect URLs |
 | PR-04 | db/trigger-provision-user | provision_new_user() trigger with HR module/rights defaults |
-
 **Outputs:**
 - AuthContext.jsx wraps app, provides currentUser and session via onAuthStateChange
 - Email/password: supabase.auth.signUp() and signIn() wired to Register and Login forms
