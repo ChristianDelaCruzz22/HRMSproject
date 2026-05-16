@@ -17,6 +17,7 @@ The project is built using modern web technologies and integrates with Supabase 
 - Role-based access control (RBAC)
 - Status-based account verification
 - Supabase Row Level Security (RLS)
+- wawawiwaw
 
 ---
 
