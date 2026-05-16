@@ -51,8 +51,10 @@ async function fetchUserProfile() {
 function renderUserUI() {
     if (!userProfile) return;
 
+    
     const nameEl = document.getElementById('userName');
     if (nameEl) nameEl.innerText = `${userProfile.first_name} ${userProfile.last_name}`;
+    
     
     const roleDisplay = { 'SuperAdmin': 'CEO ', 'Admin': 'Manager ', 'User': 'Employee ' };
     const roleEl = document.getElementById('userRole');
@@ -68,12 +70,14 @@ function renderUserUI() {
         }
     }
 
+    
     document.querySelectorAll('.auth-admin').forEach(el => {
         el.style.display = (currentRoleView === 'Admin' || currentRoleView === 'SuperAdmin') ? 'block' : 'none';
     });
     document.querySelectorAll('.auth-super').forEach(el => {
         el.style.display = (currentRoleView === 'SuperAdmin') ? 'block' : 'none';
     });
+
 
     const switcher = document.getElementById('superAdminTools');
     if (userProfile.role === 'SuperAdmin' && switcher) {
@@ -95,6 +99,7 @@ async function updateBadges() {
         recruitBadge.style.display = pendingCount > 0 ? 'flex' : 'none';
     }
 
+    
     const { count: msgCount } = await _supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -106,6 +111,7 @@ async function updateBadges() {
         msgBadge.style.display = msgCount > 0 ? 'flex' : 'none';
     }
 
+    
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
     const { data: annData } = await _supabase
@@ -171,10 +177,19 @@ window.fetchDirectory = async () => {
     } catch (err) {
         console.error("Directory Critical Error:", err);
         const grid = document.getElementById('directoryGrid');
-        if (grid) grid.innerHTML = `<p style="color:red; padding: 20px;">Error: ${err.message}</p>`;
+        if (grid) grid.innerHTML = `<p style="colopenAddModalor:red; padding: 20px;">Error: ${err.message}</p>`;
     }
 };
 
+window.openAddModal = () => {
+    const modal = document.getElementById('deptModal');
+    document.getElementById('modalTitle').textContent = "Add New Department";
+    document.getElementById('deptForm').reset();
+    document.getElementById('editDeptId').value = "";
+    
+    
+    modal.style.display = 'flex'; 
+};
 
 function renderDirectoryCards(list) {
     const grid = document.getElementById('directoryGrid');
@@ -256,7 +271,7 @@ async function loadFilterDepartments() {
     }
 }
 
-// Function to populate the Filter Dropdown from the DB
+
 async function populateFilterDepartments() {
     const { data: departments, error } = await _supabase
         .from('department') 
@@ -408,6 +423,10 @@ function setupUIListeners() {
 window.previewRole = (newRole) => {
     currentRoleView = newRole;
     renderUserUI();
+    
+    if (typeof renderTable === 'function') {
+        renderTable(allDepartments, lastFetchedJobs);
+    }
 };
 
 window.handleSignOut = async () => {

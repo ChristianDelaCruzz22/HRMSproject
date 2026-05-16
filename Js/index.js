@@ -43,6 +43,13 @@ function resetLoginUI() {
 
 document.addEventListener('DOMContentLoaded', async () => {
 
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'updated') {
+        showToast("Password updated! Please sign in with your new credentials.", "success");
+        
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const loginForm = document.querySelector('.login-form');
     const googleBtn = document.querySelector('.btn-google');
     const passwordInput = document.getElementById('password');
@@ -109,6 +116,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+
+
 });
 
 
@@ -144,20 +153,26 @@ async function handleUserStatus(user) {
 
         if (error) throw error;
 
-
+        
         if (!appData) {
             showToast("Complete your profile...", "info");
-            setTimeout(() => {
-                window.location.href = "register.html";
-            }, 1500);
+            setTimeout(() => { window.location.href = "register.html"; }, 1500);
             return;
         }
 
-        const allowedStatuses = ['Approved', 'online', 'offline'];
+        
+        if (appData.status === 'Deactivated') {
+            await _supabase.auth.signOut();
+            showToast("Account Deactivated. Please contact HR.", "error");
+            resetLoginUI();
+            return; 
+        }
+
+        
         const isManagement = ['Admin', 'SuperAdmin'].includes(appData.role);
+        const isApprovedUser = appData.status === 'Approved' || appData.status === 'online' || appData.status === 'offline';
 
-        if (allowedStatuses.includes(appData.status) || isManagement) {
-
+        if (isManagement || isApprovedUser) {
             await _supabase
                 .from('employee')
                 .update({
@@ -167,12 +182,14 @@ async function handleUserStatus(user) {
                 .eq('user_id', user.id);
 
             showToast("Access Granted", "success");
+            setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
 
-            setTimeout(() => {
-                window.location.href = "dashboard.html";
-            }, 1000);
-
+        } else if (appData.status === 'Pending') {
+            await _supabase.auth.signOut();
+            showToast("Account pending approval.", "info");
+            resetLoginUI();
         } else {
+            
             await _supabase.auth.signOut();
             showToast(`Status: ${appData.status}`, "info");
             resetLoginUI();
