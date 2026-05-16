@@ -26,35 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('applicationForm');
     const fileInput = document.getElementById('resume');
     const uploadLabel = document.querySelector('.custom-file-upload span');
+
     
-    const deptSelect = document.getElementById('department'); 
-
-    async function loadDepartments() {
-        try {
-            const { data: depts, error } = await _supabase
-                .from('department')
-                .select('id, department_name')
-                .order('department_name', { ascending: true });
-
-            if (error) throw error;
-
-            if (depts) {
-                deptSelect.innerHTML = '<option value="" disabled selected>Select Department</option>';
-                depts.forEach(dept => {
-                    const option = document.createElement('option');
-                    option.value = dept.id; // The UUID
-                    option.textContent = dept.department_name;
-                    deptSelect.appendChild(option);
-                });
-            }
-        } catch (err) {
-            console.error("Failed to sync departments:", err);
-            deptSelect.innerHTML = '<option value="" disabled>Error loading departments</option>';
-        }
-    }
-
-    await loadDepartments();
-
     document.querySelectorAll('.password-toggle').forEach(btn => {
         btn.addEventListener('click', function() {
             const input = this.previousElementSibling;
@@ -174,15 +147,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (dbError) throw dbError;
 
        
-        
-        const selectedDeptId = document.getElementById('department').value;
+        // 1. Get the department name and REMOVE extra spaces automatically
+        const selectedDeptName = document.getElementById('department').value.trim();
 
-        
+        // 2. Search the Department table with extra protection
+        const { data: deptData, error: deptLookupError } = await _supabase
+            .from('department')
+            .select('id')
+            // Using ilike makes it case-insensitive (e.g., 'legal' matches 'Legal')
+            .ilike('department_name', selectedDeptName) 
+            .maybeSingle(); 
+
+        if (deptLookupError || !deptData) {
+            console.warn(`Warning: Could not find a UUID for "${selectedDeptName}".`);
+        }
+
+        // 3. Store the link in the job table
         const { error: jobError } = await _supabase
             .from('job')
             .insert([{
                 employee_id: newEmployee.id,
-                department_id: selectedDeptId, 
+                department_id: deptData ? deptData.id : null, 
                 position: document.getElementById('position').value.trim(),
                 work_location: 'On-site' 
             }]);

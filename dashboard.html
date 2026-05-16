@@ -7,7 +7,6 @@
     <title>HRMS | Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="Icon2.png">
     <link rel="stylesheet" href="./Css/dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,7 +24,17 @@
         <div class="nav-item active" id="nav-dashboard">
             <a href="dashboard.html" class="nav-link"><i class="fa fa-th-large"></i> Dashboard</a>
         </div>
-        
+        <div class="nav-item" hidden><a href="attendance.html" class="nav-link"><i class="fa fa-calendar-check-o"></i> Attendance</a></div>
+        <div class="nav-item" hidden><a href="schedule.html" class="nav-link"><i class="fa fa-clock-o"></i> Schedule</a></div>
+
+        <div class="nav-group-label" hidden>Requests</div>
+        <div class="nav-item" hidden><a href="leave.html" class="nav-link"><i class="fa fa-plane"></i> Leave</a></div>
+        <div class="nav-item" hidden><a href="my-request.html" class="nav-link"><i class="fa fa-file-text-o"></i> My Requests</a></div>
+
+        <div class="nav-group-label" hidden>Communication</div>
+        <div class="nav-item" hidden><a href="announcement.html" class="nav-link"><i class="fa fa-bullhorn"></i> Announcements</a></div>
+        <div class="nav-item" hidden><a href="messages.html" class="nav-link"><i class="fa fa-envelope-o"></i> Messages</a></div>
+
         <div class="auth-admin">
             <div class="nav-group-label">Talent & Growth</div>
             <div class="nav-item"><a href="employee-management.html" class="nav-link"><i class="fa fa-id-badge"></i> Employee Managemennt</a></div>
@@ -40,6 +49,12 @@
             <div class="nav-item" hidden><a href="training.html" class="nav-link"><i class="fa fa-graduation-cap"></i> Training</a></div>
         </div>
 
+        <div class="auth-super" hidden>
+            <div class="nav-group-label" hidden>Finance & Admin</div>
+            <div class="nav-item" hidden><a href="payroll.html" class="nav-link"><i class="fa fa-credit-card"></i> Payroll</a></div>
+            <div class="nav-item" hidden><a href="reports.html" class="nav-link"><i class="fa fa-pie-chart"></i> Reports</a></div>
+            <div class="nav-item" hidden><a href="settings.html" class="nav-link"><i class="fa fa-cog"></i> Settings</a></div>
+        </div>
     </div>
 </div>  
 
@@ -90,135 +105,70 @@
     </header>
 
     <main class="content">
-        <section class="dashboard-header">
-            <div class="welcome-text">
-                <h1 id="welcome-message">Good Morning, <span id="userName">User</span>!</h1>
-                <p id="dashboard-date">Tuesday, May 12, 2026</p>
+        <div class="stats-grid" id="stats-container">
+            <div class="stat-card-new">
+                <div class="details"><span>Syncing Data...</span><h2>--</h2></div>
             </div>
-            <div class="role-indicator">
-                <span class="badge-role" id="department-badge">
-                    <span class="label-text">Department:</span> 
-                    <span id="department-tag">Loading...</span>
-                </span>
-                
-                <span class="badge-role" id="role-badge">
-                    <span class="label-text">Role:</span> 
-                    <span id="role-tag">Loading...</span>
-                </span>
-            </div>
-        </section>
+        </div>
 
-        <section class="stats-grid" id="stats-container">
-            <div class="stat-card-new skeleton"></div>
-            <div class="stat-card-new skeleton"></div>
-            <div class="stat-card-new skeleton"></div>
-            <div class="stat-card-new skeleton"></div>
-        </section>
-
-        <div class="dashboard-grid-layout">
-            
-            <div class="column-left">
-                
-                <div class="content-card chart-main" id="analytics-panel">
+        <div class="dashboard-layout">
+            <div class="layout-main">
+                <div class="content-card">
                     <div class="card-header">
-                        <h3><i class="fa fa-line-chart"></i> Company Hiring & Growth</h3>
-                        <div class="card-actions">
-                            <select id="timeFilter" class="chart-filter" onchange="updateChartData()">
-                            <option value="6">Last 6 Months</option>
-                            <option value="12" selected>Last Year</option>
-                        </select>
-                        </div>
+                        <h3 id="chart-title"><i class="fa fa-line-chart"></i> Attendance Trend</h3>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="mainChart"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="attendanceChart"></canvas>
                     </div>
                 </div>
 
                 <div class="content-card">
                     <div class="card-header">
-                        <h3 id="table-title"><i class="fa fa-list-alt"></i> Recent Activity</h3>
-                        <div class="search-box">
-                            <i class="fa fa-search"></i>
-                            <input type="text" id="activitySearch" placeholder="Search activity..." onkeyup="handleActivitySearch()">
-                        </div>
+                        <h3 id="table-title"><i class="fa fa-history"></i> Recent Activity</h3>
+                        <button class="view-all-btn">
+                            View All <i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                        </button>
                     </div>
-                    <div class="table-wrapper">
-                        <table class="hrms-table">
-                            <thead>
-                                <tr id="table-head">
-                                    <th>Employee</th>
-                                    <th>Action</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="activity-body">
-                                </tbody>
-                        </table>
-                    </div>
-                    <div id="table-empty" style="display:none;" class="empty-state">
-                        <i class="fa fa-folder-open-o"></i>
-                        <p>No records found for this period.</p>
-                    </div>
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr id="table-head-row">
+                                <th>Name</th>
+                                <th>Action</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activity-body">
+                            <tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:20px;">Fetching latest data...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="column-right">
-                
-                <div class="content-card">
+            <div class="layout-side" id="side-panel">
+                <div class="content-card" id="quick-actions-container">
                     <div class="card-header"><h3>Quick Actions</h3></div>
                     <div class="quick-actions-grid" id="actions-list">
                         </div>
                 </div>
 
-                <div class="content-card" id="side-chart-panel">
-                    <div class="card-header"><h3>Staff Distribution</h3></div>
-                    <div class="chart-container-small">
+                <div class="content-card" id="distribution-container">
+                    <div class="card-header"><h3>Department Distribution</h3></div>
+                    <div class="chart-wrapper-small">
                         <canvas id="deptChart"></canvas>
                     </div>
                 </div>
 
-                <div class="content-card">
-                    <div class="card-header"><h3>Latest Updates</h3></div>
-                    <div class="notification-feed" id="announcement-list">
-                        <div class="feed-item">
-                            <div class="feed-icon"><i class="fa fa-bullhorn"></i></div>
-                            <div class="feed-content">
-                                <strong>System Update</strong>
-                                <p>Version 2.0 HRMS is now live.</p>
-                                <span>2 hours ago</span>
-                            </div>
-                        </div>
+                <div id="alert-container">
+                    <div class="alert-card orange" id="dynamic-alert" style="display:none;">
+                        <i class="fa fa-info-circle"></i>
+                        <p id="alert-text">No pending alerts</p>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
 </div>
-
-<div id="directoryDrawer" class="side-drawer">
-    <div class="drawer-header">
-        <div class="header-title">
-            <i class="fa fa-users"></i>
-            <span>Employee Directory</span>
-        </div>
-        <button onclick="toggleDirectoryDrawer()" class="close-btn">
-            <i class="fa fa-times"></i>
-        </button>
-    </div>
-    
-    <div class="drawer-search-container">
-        <div class="search-wrapper">
-            <i class="fa fa-search"></i>
-            <input type="text" id="drawerSearchInput" placeholder="Search by name or dept..." onkeyup="filterDrawerList()">
-        </div>
-    </div>
-
-    <div id="drawerEmployeeList" class="drawer-content">
-        </div>
-</div>
-<div id="drawerOverlay" class="drawer-overlay" onclick="toggleDirectoryDrawer()"></div>
 
 <script src="./Js/dashboard.js"></script>
 <script src="./Js/recruitment.js"></script>

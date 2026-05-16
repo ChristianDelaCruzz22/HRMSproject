@@ -35,8 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateBadge();
         
         
-        try { loadNotifications(); } catch(e) {  }
-        try { updateMessageBadge(); } catch(e) {  }
+        try { loadNotifications(); } catch(e) { console.log("Notif table missing"); }
+        try { updateMessageBadge(); } catch(e) { console.log("Message table missing"); }
         
     } else {
         window.location.href = "dashboard.html";
@@ -98,7 +98,7 @@ async function loadApplicants(status) {
             .ilike('status', status) 
             .order('created_at', { ascending: false });
 
-        
+        console.log(`Checking ${status} applicants:`, data);
 
         if (error) throw error;
 
@@ -109,6 +109,7 @@ async function loadApplicants(status) {
 
         list.innerHTML = data.map(app => {
     
+        console.log("Loading Applicant:", app.first_name, "Row ID:", app.id);
 
         const resumeClass = (status === 'Approved') ? 'resume-btn resume-btn-approved' : 'resume-btn';
         const displayPosition = (app.job && app.job.length > 0) ? app.job[0].position : 'Employee';

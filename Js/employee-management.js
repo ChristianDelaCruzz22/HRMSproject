@@ -11,6 +11,7 @@ let allEmployees = [];
 
 
 async function init() {
+    console.log("System: Initializing Employee Management...");
     const { data: { session } } = await _supabase.auth.getSession();
     
     if (!session) {
@@ -347,7 +348,7 @@ async function updateEmployeeProfile(employeeId, newDetails) {
         if (historyError) {
             console.error("Audit Trail failed, but profile updated:", historyError);
         } else {
-            alert("Audit Trail created successfully.");
+            console.log("Audit Trail created successfully.");
         }
 
         showToast("Profile and Audit Log updated!", "success");
@@ -363,7 +364,7 @@ async function updateEmployeeProfile(employeeId, newDetails) {
 
 async function fetchEmployees() {
     try {
-        
+        console.log("System: Fetching data from 'job' table...");
 
         
         const { data: employees, error: empError } = await _supabase
@@ -417,7 +418,7 @@ async function fetchEmployees() {
         renderEmployeeTable(allEmployees);
 
     } catch (err) {
-        alert("Linkage Error: " + err.message);
+        console.error("Linkage Error:", err.message);
         
         const tbody = document.getElementById('employee-tbody');
         if (tbody) tbody.innerHTML = `<tr><td colspan="6">Error: ${err.message}</td></tr>`;
@@ -535,7 +536,7 @@ document.getElementById('addEmployeeForm').onsubmit = async (e) => {
         
         if (adminSession) {
             await _supabase.auth.setSession(adminSession);
-            alert("System: Admin session restored.");
+            console.log("System: Admin session restored.");
         }
 
         document.getElementById('addEmployeeForm').reset();
@@ -1022,7 +1023,7 @@ function renderModalAvatar(emp) {
     }
 }
 
-
+// Helper function to avoid repeating code
 async function fillModalData(emp) {
     document.getElementById('editUserId').value = emp.user_id;
     document.getElementById('editFirstName').value = emp.first_name || '';
