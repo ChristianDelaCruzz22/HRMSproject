@@ -129,7 +129,7 @@ The goal of this project is to provide a scalable and modern HR management platf
 Live Deployment:
 https://hrm-sproject.vercel.app/
 
----
+--- 
 
 # License
 This project is intended for educational and academic purposes. 
