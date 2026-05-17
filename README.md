@@ -1,5 +1,11 @@
 # Human Resource Management System (HRMS)
 
+# Deployment
+Live Deployment:
+https://hrm-sproject.vercel.app/
+
+---
+
 ## Overview
 The Human Resource Management System (HRMS) is a web-based application designed to help organizations manage employee information, recruitment processes, departmental structures, and workforce monitoring in a centralized platform.
 
@@ -7,7 +13,7 @@ This system streamlines HR operations by providing role-based access for CEOs (S
 
 The project is built using modern web technologies and integrates with Supabase for authentication, database management, and real-time data handling.
 
---- 
+---
 
 # Features
 
@@ -17,7 +23,6 @@ The project is built using modern web technologies and integrates with Supabase 
 - Role-based access control (RBAC)
 - Status-based account verification
 - Supabase Row Level Security (RLS)
-- wawawiwaw
 
 ---
 
@@ -94,7 +99,7 @@ Dynamic dashboard based on user role:
 ## Frontend
 - HTML5
 - CSS3
-- JavaScript (Vanilla JS)
+- JavaScript
 - Font Awesome
 
 ## Backend & Database
@@ -109,6 +114,30 @@ Dynamic dashboard based on user role:
 
 ---
 
+# Database Tables
+
+The system currently uses the following main tables:
+
+| Table Name | Purpose |
+|---|---|
+| employee | Employee and applicant information |
+| job | Current employee position |
+| jobhistory | Promotion and career history |
+| departments | Department information |
+| notifications | System notifications |
+
+---
+
+# Role Access
+
+| Role | Access Level |
+|---|---|
+| SuperAdmin | Full system access |
+| Admin | Employee and recruitment management |
+| User | Personal profile and directory access |
+
+---
+
 # System Modules
 
 - Dashboard
@@ -116,6 +145,7 @@ Dynamic dashboard based on user role:
 - Employee Management
 - Directory
 - Departments
+- Profile Management
 - Notifications
 
 ---
@@ -125,13 +155,15 @@ The goal of this project is to provide a scalable and modern HR management platf
 
 ---
 
-# Deployment
-Live Deployment:
-https://hrm-sproject.vercel.app/
+# Developers Notes
+This project is continuously improving and may include future modules such as:
+- Attendance Monitoring
+- Leave Management
+- Payroll System
+- Reports and Analytics
+- Training Management
 
---- 
+---
 
 # License
-This project is intended for educational and academic purposes. 
-
-#Hello World
+This project is intended for educational and academic purposes.
