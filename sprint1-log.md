@@ -3,9 +3,20 @@
 ## Sprint Duration
 - **Start:** March 23, 2026
 - **End:** March 30, 2026
-- **Team:** M1 (Project Lead), M2 (Frontend), M3 (Database), M4 (Auth), M5 (QA/Docs)
+- **Team:** Group 6 - Alt F4 (IM2)
 
 ---
+
+## Team Members
+
+| Member | Name                  | Role                                  |
+| ------ | --------------------- | ------------------------------------- |
+| M1     | Christian Dela Cruz   | Project Lead / Full-Stack Developer   |
+| M2     | Josh Visitacion       | Frontend Developer (UI/UX)            |
+| M3     | Wesly Quilendireno    | Backend / Database Engineer           |
+| M4     | Felicity Zoe Villa    | Rights & Authentication Specialist    |
+| M5     | Rajah Renzuken Lamsen | QA / Documentation Specialist         |
+
 
 ## Week 1 (March 23, 2026) — Initial Planning & Setup
 
@@ -76,7 +87,7 @@
 
 ## Full Sprint 1 Deliverables by Member
 
-### M1 — Project Lead / Full-Stack Developer
+### M1 — Christian Dela Cruz - Project Lead / Full-Stack Developer
 | PR | Branch | Description |
 |---|---|---|
 | PR-01 | feat/project-scaffold | Vite + React + Tailwind initial setup |
@@ -94,7 +105,7 @@ TOTAL PR - 3
 
 ---
 
-### M2 — Frontend Developer (UI/UX)
+### M2 — Josh Visitacion - Frontend Developer (UI/UX)
 | PR | Branch | Description |
 |---|---|---|
 | PR-01 | feat/ui-login-page | Login form with email/password + Google OAuth button |
@@ -113,7 +124,7 @@ TOTAL PR - 3
 TOTAL PR - 4 
 ---
 
-### M3 — Backend / Database Engineer
+### M3 —  Wesly Quilendireno - Backend / Database Engineer
 | PR | Branch | Description |
 |---|---|---|
 | PR-01 | db/initial-schema | HopeDB HR tables + record_status + stamp columns |
@@ -134,7 +145,7 @@ TOTAL PR - 4
 TOTAL PR - 3
 ---
 
-### M4 — Rights & Authentication Specialist
+### M4 — Felicity Zoe Villa - Rights & Authentication Specialist
 | PR | Branch | Description |
 |---|---|---|
 | PR-01 | feat/auth-context | AuthContext, session listener, currentUser state |
@@ -154,7 +165,7 @@ TOTAL PR - 3
 TOTAL PR - 4
 ---
 
-### M5 — QA / Documentation Specialist
+### M5 — Rajah Renzuken Lamsen - QA / Documentation Specialist
 | PR | Branch | Description |
 |---|---|---|
 | PR-01 | test/sprint1-auth-flows | Auth test cases: email registration, Google OAuth, login guard |
@@ -175,6 +186,7 @@ TOTAL PR - 2
 
 
 TOTAL SPRINT 1 PR 16/18
+
 ---
 
 ## Completed This Sprint
