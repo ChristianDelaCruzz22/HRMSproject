@@ -4,7 +4,7 @@
 - **Start:** April 2, 2026
 - **End:** April 13, 2026
 - **Theme:** HR CRUD, Rights Enforcement & Soft Delete Visibility
-- **Team:**Group 6 - Alt F4 (IM2)
+- **Team:** Group 6 - Alt F4 (IM2)
 - **Total PRs This Sprint:** 20 (M1: 4, M2: 5, M3: 4, M4: 4, M5: 3)
 
 ---
@@ -19,7 +19,7 @@
 | M4     | Felicity Zoe Villa    | Rights & Authentication Specialist    |
 | M5     | Rajah Renzuken Lamsen | QA / Documentation Specialist         |
 
-
+---
 
 ## Week 3 (April 2, 2026) — CRUD Implementation Begins
 
@@ -34,16 +34,13 @@
 | Testing | Testing of new and improved source code | M5 |  Complete |
 
 ### Notes
-- Sprint 2 theme established: full CRUD for all four HR tables (Employee, Job History,
-  Job, Department) with rights enforcement across all 17 rights
+- Sprint 2 theme established: full CRUD for all four HR tables (Employee, Job History, Job, Department) with rights enforcement across all 17 rights
 - M1 began building service functions for Employee, Job History, Job, and Department modules
 - M2 started EmployeeListPage and modal components with rights gating in mind
 - M3 started writing RLS policies for all four tables — SELECT, INSERT, UPDATE patterns
 - M4 began designing UserRightsContext to load all 17 rights on login
-- M5 completed testing of the new and improved source code —
-  no errors found during debugging, all previously failing Sprint 1 tests now passing 
-- UI/UX direction updated again: shifting from "Formal" toward semi-professional aesthetic
-  using floating cards and split backgrounds
+- M5 completed testing of the new and improved source code — no errors found during debugging, all previously failing Sprint 1 tests now passing
+- UI/UX direction updated again: shifting from "Formal" toward semi-professional aesthetic using floating cards and split backgrounds
 - Auth flow for emp_id assigned to M4 — covers Dashboard access and Time-In/Out permissions
 - Timestamp real-time persistence flagged as a dependency between M1 and M3
 
@@ -62,7 +59,7 @@
 | Development | Job History service functions | M1 |  Complete |
 | Development | Job and Department service functions | M1 |  Complete |
 | Development | /deactivate-items route guard for USER accounts | M1 |  Complete |
-| Front-end | EmployeeListPage with stamp gating + INACTIVE filter | M2 | Complete |
+| Front-end | EmployeeListPage with stamp gating + INACTIVE filter | M2 |  Complete |
 | Front-end | EmployeeDetailPage + JobHistoryPanel + AddJobHistoryForm | M2 |  Complete |
 | Front-end | JobListPage + DeptListPage + modals | M2 |  Complete |
 | Front-end | Sidebar gating — hide Deleted Items + Admin links for USER | M2 |  Complete |
@@ -72,13 +69,13 @@
 | Auth | Stamp column visibility + sidebar link gating | M4 |  Complete |
 | Testing | Full 51-case rights test matrix (3 users × 17 rights) | M5 |  Complete |
 | Testing | Cascade, recovery, API bypass, stamp visibility tests | M5 |  Complete |
-| Documentation | Sprint 2 log | M5 |  Complete |
+| Documentation | Sprint 2 log | M5 | Complete |
 
 ---
 
 ## Full Sprint 2 Deliverables by Member
 
-### M1 — Christian Dela Cruz - Project Lead / Full-Stack Developer
+### M1 — Christian Dela Cruz — Project Lead / Full-Stack Developer
 | PR | Branch | Description | Status |
 |---|---|---|---|
 | PR-01 | feat/employee-api | Employee service functions (CRUD + soft delete + recover) |  Merged |
@@ -95,25 +92,23 @@
 - UserRightsContext integrated at app level
 - Route guard on /deleted-items blocking USER accounts
 
-PR NOW : 4
-**Running PR Total: 8** (4 from Sprint 1 + 4 from Sprint 2)
+**Sprint 2 PRs: 4**
+**Running PR Total: 7** (3 from Sprint 1 + 4 from Sprint 2)
 
 ---
 
-### M2 — Josh Visitacion - Frontend Developer (UI/UX)
+### M2 — Josh Visitacion — Frontend Developer (UI/UX)
 | PR | Branch | Description | Status |
 |---|---|---|---|
 | PR-01 | feat/ui-employee-list | EmployeeListPage with stamp gating + INACTIVE filter |  Merged |
 | PR-02 | feat/ui-employee-detail-jh | EmployeeDetailPage + JobHistoryPanel + AddJobHistoryForm |  Merged |
 | PR-03 | feat/ui-job-dept | JobListPage + DeptListPage + their modals |  Merged |
 | PR-04 | feat/ui-deleted-items | SoftDeletedItemsPage with 4 tabs and Recover buttons |  Merged |
-| PR-05 | fix/ui-sidebar-gating | Hide Deleted Items + Admin links for USER in sidebar | Merged |
+| PR-05 | fix/ui-sidebar-gating | Hide Deleted Items + Admin links for USER in sidebar |  Merged |
 
 **Outputs:**
-- EmployeeListPage: empno, lastname, firstname, gender, hiredate, sepDate, current job;
-  stamp column shown only to ADMIN/SUPERADMIN; INACTIVE rows hidden for USER
-- EmployeeDetailPage: profile view with JobHistoryPanel (jobDesc, deptName, effDate, salary)
-  sorted by effDate descending
+- EmployeeListPage: empno, lastname, firstname, gender, hiredate, sepDate, current job; stamp column shown only to ADMIN/SUPERADMIN; INACTIVE rows hidden for USER
+- EmployeeDetailPage: profile view with JobHistoryPanel (jobDesc, deptName, effDate, salary) sorted by effDate descending
 - AddEmployeeModal, EditEmployeeModal, SoftDeleteConfirmDialog (EMP_ADD/EMP_EDIT/EMP_DEL gated)
 - AddJobHistoryForm embedded in EmployeeDetailPage (JH_ADD gated)
 - EditJobHistoryModal (JH_EDIT gated); soft-delete button per row (JH_DEL gated)
@@ -123,12 +118,12 @@ PR NOW : 4
 - Sidebar link for Deleted Items and Admin hidden for USER accounts
 - UI redesigned to semi-professional: floating cards and split backgrounds
 
-PR NOW : 4
-**Running PR Total: 8** (4 from Sprint 1 + 5 from Sprint 2)
+**Sprint 2 PRs: 5**
+**Running PR Total: 9** (4 from Sprint 1 + 5 from Sprint 2)
 
 ---
 
-### M3 — Wesly Quilendireno - Backend / Database Engineer
+### M3 — Wesly Quilendireno — Backend / Database Engineer
 | PR | Branch | Description | Status |
 |---|---|---|---|
 | PR-01 | db/rls-employee | SELECT + INSERT + UPDATE policies for employee |  Merged |
@@ -138,21 +133,18 @@ PR NOW : 4
 
 **Outputs:**
 - RLS SELECT policy on employee: USER sees ACTIVE only; ADMIN/SUPERADMIN see all rows
-- RLS INSERT (EMP_ADD=1), UPDATE-edit (EMP_EDIT=1), UPDATE-deactivate (EMP_DEL=1),
-  UPDATE-recover (ADMIN/SUPERADMIN) policies on employee
+- RLS INSERT (EMP_ADD=1), UPDATE-edit (EMP_EDIT=1), UPDATE-deactivate (EMP_DEL=1), UPDATE-recover (ADMIN/SUPERADMIN) policies on employee
 - Same 4-policy pattern applied to jobHistory, job, and department tables
-- Soft-delete cascade trigger: setting employee INACTIVE cascades to all their jobHistory rows;
-  restoring employee restores all their jobHistory rows
-- employee_current_job SQL view: latest active jobHistory per employee joined with
-  job.jobDesc and department.deptName
+- Soft-delete cascade trigger: setting employee INACTIVE cascades to all their jobHistory rows; restoring employee restores all their jobHistory rows
+- employee_current_job SQL view: latest active jobHistory per employee joined with job.jobDesc and department.deptName
 - All RLS policies tested in Supabase SQL editor using role impersonation
 
-PR NOW : 4
+**Sprint 2 PRs: 4**
 **Running PR Total: 8** (4 from Sprint 1 + 4 from Sprint 2)
 
 ---
 
-### M4 — Felicity Zoe Villa - Rights & Authentication Specialist
+### M4 — Felicity Zoe Villa — Rights & Authentication Specialist
 | PR | Branch | Description | Status |
 |---|---|---|---|
 | PR-01 | feat/rights-context | UserRightsContext + useRights hook (17 rights) |  Merged |
@@ -161,8 +153,7 @@ PR NOW : 4
 | PR-04 | feat/rights-stamp-sidebar | Stamp column visibility + sidebar link gating |  Merged |
 
 **Outputs:**
-- UserRightsContext.jsx: on login, queries all 17 UserModule_Rights rows for currentUser,
-  stores as rights map
+- UserRightsContext.jsx: on login, queries all 17 UserModule_Rights rows for currentUser, stores as rights map
 - useRights() hook: returns rights map from context
 - Employee: Add (EMP_ADD), Edit (EMP_EDIT), Delete (EMP_DEL) buttons gated
 - Job History: Add (JH_ADD), Edit (JH_EDIT), Delete (JH_DEL) buttons gated
@@ -171,12 +162,12 @@ PR NOW : 4
 - Stamp column hidden for USER accounts across all 4 table components
 - Sidebar Deleted Items and Admin links hidden for USER; /deleted-items route guard active
 
-PR NOW : 4
+**Sprint 2 PRs: 4**
 **Running PR Total: 8** (4 from Sprint 1 + 4 from Sprint 2)
 
 ---
 
-### M5 — Rajah Renzuken Lamsen - QA / Documentation Specialist
+### M5 — Rajah Renzuken Lamsen — QA / Documentation Specialist
 | PR | Branch | Description | Status |
 |---|---|---|---|
 | PR-01 | test/sprint2-rights-51-cases | Full 51-case rights test matrix results |  Merged |
@@ -185,23 +176,16 @@ PR NOW : 4
 
 **Outputs:**
 - Rights test matrix: 3 user types × 17 rights = 51 test cases, all documented with pass/fail
-- Soft-delete cascade test: soft-delete employee 00001 as SUPERADMIN → confirmed all their
-  jobHistory rows disappear for USER; confirmed ADMIN sees them in Deleted Items 
-- Recovery cascade test: recover employee 00001 as ADMIN → confirmed all their jobHistory
-  rows reappear for USER 
-- Visibility bypass test: USER calling getEmployees() without ACTIVE filter → confirmed RLS
-  blocks INACTIVE rows from all 4 tables 
-- Stamp visibility test: USER login — stamp column absent in all 4 tables ;
-  ADMIN login — stamp present 
+- Soft-delete cascade test: soft-delete employee 00001 as SUPERADMIN → confirmed all their jobHistory rows disappear for USER; confirmed ADMIN sees them in Deleted Items 
+- Recovery cascade test: recover employee 00001 as ADMIN → confirmed all their jobHistory rows reappear for USER 
+- Visibility bypass test: USER calling getEmployees() without ACTIVE filter → confirmed RLS blocks INACTIVE rows from all 4 tables 
+- Stamp visibility test: USER login — stamp column absent in all 4 tables ; ADMIN login — stamp present 
 - No hard delete audit: zero .delete() calls found on HR tables 
 - Previously failing Sprint 1 test cases now fully resolved and passing 
 - Sprint 2 log completed
 
-PR NOW : 3
+**Sprint 2 PRs: 3**
 **Running PR Total: 5** (2 from Sprint 1 + 3 from Sprint 2)
-
-
-TOTAL PR : 19/20
 
 ---
 
@@ -230,22 +214,20 @@ TOTAL PR : 19/20
 
 ## Resolutions Applied
 - Sprint 1 test failures resolved by M5 before Sprint 2 testing began — clean slate
-- RLS policies tested directly in Supabase SQL editor using role impersonation to catch
-  issues before frontend integration
-- Sidebar gating handled jointly by M2 (UI hiding) and M4 (rights context) to ensure
-  both visual and route-level protection
+- RLS policies tested directly in Supabase SQL editor using role impersonation to catch issues before frontend integration
+- Sidebar gating handled jointly by M2 (UI hiding) and M4 (rights context) to ensure both visual and route-level protection
 
 ---
 
 ## Cumulative PR Totals (Sprint 1 + Sprint 2)
 | Member | Sprint 1 | Sprint 2 | Total |
 |---|---|---|---|
-| M1 | 3 | 4 | **8** |
-| M2 | 4 | 4 | **9** |
-| M3 | 3 | 4 | **8** |
+| M1 | 3 | 4 | **7** |
+| M2 | 4 | 5 | **9** |
+| M3 | 4 | 4 | **8** |
 | M4 | 4 | 4 | **8** |
 | M5 | 2 | 3 | **5** |
-| **Team** | **16** | **19** | **35** |
+| **Team** | **17** | **20** | **37** |
 
 ---
 
