@@ -1,10 +1,8 @@
 # Human Resource Management System (HRMS)
 
-# Deployment
+## Deployment
 Live Deployment:
 https://hrm-sproject.vercel.app/
-
----
 
 ## Overview
 The Human Resource Management System (HRMS) is a web-based application designed to help organizations manage employee information, recruitment processes, departmental structures, and workforce monitoring in a centralized platform.
