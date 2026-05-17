@@ -1,7 +1,7 @@
 # Sprint 1 Log — HRMS Project
 
 ## Sprint Duration
-- **Start:** March 23, 2026
+- **Start:** March 25, 2026
 - **End:** March 30, 2026
 - **Team:** Group 6 - Alt F4 (IM2)
 
@@ -71,8 +71,8 @@
 | Back-end | Fix "Forgot Password" function | M3, M1 | In Progress (Urgent) |
 | Front-end | Update Dashboard elements | M1, M2 | To Do |
 | Front-end | General UI improvements | M2 | In Progress |
-| Development | Transition website to Git | M1 | ✅ Complete |
-| Testing | Vitest testing of source code | M5 | ✅ Complete (Partial) |
+| Development | Transition website to Git | M1 |  Complete |
+| Testing | Vitest testing of source code | M5 |  Complete (Partial) |
 
 ### Notes
 - Database remains the highest priority — HopeDB tables (employee, department, job, jobHistory)
