@@ -2,7 +2,7 @@
 
 ## User Manual
 
-> A web-based Human Resource Management System designed to streamline recruitment, employee management, department organization, and workforce monitoring.
+> A web-based Human Resource Management System designed to streamline recruitment, employee management, department organization, and workforce monitoring..
 
 ---
 
