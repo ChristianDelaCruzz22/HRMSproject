@@ -413,19 +413,43 @@ window.filterDeptTable = () => {
 };
 
 window.deleteDept = async (id) => {
-    if (!confirm("Are you sure you want to delete this department? This cannot be undone.")) return;
+    const dept = allDepartments.find(d => d.id === id);
+    const deptName = dept ? dept.department_name : "this department";
+
+    if (!confirm(`Are you sure you want to permanently delete ${deptName}?\nThis will also remove all job assignments and tracking history linked to it.`)) return;
 
     try {
-        const { error } = await _supabase
+        
+        const { error: jobError } = await _supabase
+            .from('job')
+            .delete()
+            .eq('department_id', id);
+
+        if (jobError) throw jobError;
+
+        
+        const { error: historyError } = await _supabase
+            .from('jobhistory')
+            .delete()
+            .eq('department_id', id);
+
+        if (historyError) throw historyError;
+
+        
+        const { error: deptError } = await _supabase
             .from('department')
             .delete()
             .eq('id', id);
 
-        if (error) throw error;
+        if (deptError) throw deptError;
+        
         
         await fetchData();
+        alert(`"${deptName}" was successfully and permanently deleted.`);
+
     } catch (err) {
-        alert("Error deleting department: " + err.message);
+        console.error("Complete delete sequence failed:", err);
+        alert("Error deleting department: " + (err.message || err));
     }
 };
 
